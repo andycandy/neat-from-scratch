@@ -6,6 +6,7 @@ Resume:   uv run python experiments/run_slime.py --out runs/slime1 --resume
 from __future__ import annotations   # lets `Pool | None` etc. appear in type hints
 
 import argparse
+import heapq
 import os
 import pickle
 import sys
@@ -37,10 +38,16 @@ KEEP_CHECKPOINTS = 3       # keep the last few, a crash while saving can corrupt
 
 
 def make_config() -> NeatConfig:
-    # TODO: start from XOR defaults, change only what Unit 4 §10 says:
-    #   12 inputs, 3 outputs, output_activation "tanh",
-    #   activations += ("identity", "step"), max_stagnation=20, pop_size from your budget
-    return NeatConfig(num_inputs=12, num_outputs=3)
+    """XOR defaults, changing only what Unit 4 §10 asks for."""
+    return NeatConfig(
+        num_inputs=12,                    # agent, ball, opponent: x, y, vx, vy each
+        num_outputs=3,                    # forward, backward, jump
+        pop_size=150,                     # revisit after measuring steps/s (step 5)
+        output_activation="tanh",         # press a button when its output > 0
+        activations=("identity", "sigmoid", "tanh", "relu", "sin", "gauss", "abs", "step"),
+        max_stagnation=20,                # noisy fitness: give species longer
+        target_species=(8, 12),           # dynamic threshold aims at ~10 species
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -58,70 +65,119 @@ def _init_worker() -> None:
 def play(net, env: SlimeVolleyEnv, seed: int) -> tuple[float, int]:
     """One full game against the built-in AI. Returns (pure score, number of steps).
     `net` is the result of compile_genome(genome)."""
-    # HINT: env.seed(seed) BEFORE env.reset() (unseeded env uses global np.random -> not
-    #       reproducible). Loop until done:
-    #         out = run(net, obs[None, :] / INPUT_SCALE)[0]     # (1, 12) -> (3,)
-    #         action = (out > 0).astype(int)                     # tanh outputs, threshold 0
-    #         obs, reward, done, info = env.step(action)
-    #       sum the rewards, count the steps.
-    raise NotImplementedError
+    env.seed(seed) # BEFORE env.reset() (unseeded env uses global np.random -> not
+    obs = env.reset()
+    env.policy.reset()   # built-in AI is an RNN: env.reset() does NOT clear its memory,
+                         # so without this a game depends on the worker's previous game
+    done = False
+    total, step = 0.0, 0
+    while not done:
+        out = run(net, obs[None, :] / INPUT_SCALE)[0]
+        action = (out > 0).astype(int)
+        obs, reward, done, info = env.step(action)
+        total += reward
+        step += 1
+    return total, step
 
 
 def evaluate_genome(args: tuple[Genome, list[int]]) -> tuple[float, list[float], list[int]]:
     """Worker job: (genome, seeds) -> (fitness, per-episode scores, per-episode lengths).
     Must depend ONLY on (genome, seeds), so parallel == serial."""
     genome, seeds = args
-    # HINT: compile ONCE here, then play() each seed with the module-level _ENV
-    #       (call _init_worker() first if _ENV is None, so this also works without a pool).
-    #       fitness = mean(score_e + BETA * T_e / 3000)
-    raise NotImplementedError
+    net = compile_genome(genome=genome)
+    scores = []
+    steps = []
+    fitness = 0.0
+    if _ENV is None: _init_worker()
+    for s in seeds:
+        score, step = play(net=net, env=_ENV, seed=s)
+        scores.append(score)
+        steps.append(step)
+        fitness += score + BETA * step / 3000
+    return fitness / len(seeds), scores, steps
 
 
 # ---------------------------------------------------------------------------
 # Fitness function for Population.run
 # ---------------------------------------------------------------------------
-def make_fitness_fn(pool: Pool | None, pop: Population, last: dict):
+def make_fitness_fn(pool: Pool | None, pop: Population, hof: HallOfFame):
     """Returns fitness_fn(genomes) -> np.ndarray, as Population.run expects.
-    `last` is a dict the caller reads afterwards (this generation's genomes + results),
-    because after pop.run(...) returns, pop.genomes are already the NEXT (unevaluated) generation."""
+    Every HOF_EVERY generations it also feeds this generation's top genomes to the hall of fame
+    (here, while the scored genomes are still at hand)."""
     def fitness_fn(genomes: list[Genome]) -> np.ndarray:
-        # HINT: common random numbers: draw EPISODES seeds ONCE per call from pop.rng
-        #       (pop.rng is checkpointed, so resume stays deterministic):
-        #         seeds = [int(s) for s in pop.rng.integers(0, 2**31 - 1, size=EPISODES)]
-        #       jobs = [(g, seeds) for g in genomes]
-        #       results = pool.map(evaluate_genome, jobs) if pool else list(map(evaluate_genome, jobs))
-        #       store in `last`: genomes, results, seeds  (for the hall of fame + logging)
-        #       return np.array of the fitness values
-        raise NotImplementedError
+        seeds = [int(s) for s in pop.rng.integers(0, 2**31 - 1, size=EPISODES)]
+        jobs = [(g, seeds) for g in genomes]
+        results = pool.map(evaluate_genome, jobs) if pool else list(map(evaluate_genome, jobs))
+        fitnesses = np.array([r[0] for r in results])     # r = (fitness, scores, steps)
+
+        if pop.generation % HOF_EVERY == 0:
+            # g.fitness is NOT set yet (Population.run sets it after we return): rank by `fitnesses`
+            top = [genomes[i] for i in np.argsort(fitnesses)[::-1][:HOF_SIZE]]
+            hof.update(top, pool, pop.rng)
+        return fitnesses
     return fitness_fn
 
 
 # ---------------------------------------------------------------------------
 # Hall of fame
 # ---------------------------------------------------------------------------
-def update_hall_of_fame(hof: list[tuple[float, Genome]], candidates: list[Genome],
-                        pool: Pool | None, rng: np.random.Generator) -> list[tuple[float, Genome]]:
-    """Re-evaluate candidates on HOF_EPISODES fresh seeds; keep the best HOF_SIZE overall,
-    sorted best first by that re-evaluated PURE score (no survival bonus)."""
-    # HINT: fresh seeds from rng; reuse evaluate_genome (its 2nd return value = pure scores);
-    #       score = mean of pure scores; merge with hof; sort by score, reverse=True; slice.
-    raise NotImplementedError
+class HallOfFame:
+    """The HOF_SIZE most reliable genomes seen so far, scored by mean PURE score
+    (no survival bonus) over HOF_EPISODES fresh games.
+
+    Bounded top-k = min-heap of size k: heap[0] is the WEAKEST of the kept ones,
+    so "does the newcomer beat the worst?" is O(1) and evicting it is O(log k)."""
+
+    def __init__(self, size: int = HOF_SIZE) -> None:
+        self.size = size
+        self.heap: list[tuple[float, int, Genome]] = []   # (score, tie-breaker, genome)
+        self._tie = 0                                      # unique: ties never compare Genomes
+
+    def add(self, score: float, genome: Genome) -> None:
+        if any(g.conns == genome.conns and g.nodes == genome.nodes for _, _, g in self.heap):
+            return                                         # elitism re-sends identical copies
+        self._tie += 1
+        item = (score, self._tie, genome)
+        if len(self.heap) < self.size:
+            heapq.heappush(self.heap, item)
+        elif score > self.heap[0][0]:                      # beats the current worst?
+            heapq.heapreplace(self.heap, item)             # pop worst + push new, one step
+
+    def update(self, candidates: list[Genome], pool: Pool | None,
+               rng: np.random.Generator) -> None:
+        """Re-evaluate candidates on fresh seeds; add each by its mean pure score."""
+        seeds = [int(x) for x in rng.integers(0, 2**31 - 1, size=HOF_EPISODES)]
+        jobs = [(g, seeds) for g in candidates]
+        results = pool.map(evaluate_genome, jobs) if pool else list(map(evaluate_genome, jobs))
+        for g, (_, scores, _) in zip(candidates, results):
+            self.add(float(np.mean(scores)), g)
+
+    def ranked(self) -> list[tuple[float, Genome]]:
+        """Best first. (The heap itself is NOT sorted; only heap[0] is guaranteed.)"""
+        return [(score, g) for score, _, g in sorted(self.heap, key=lambda t: t[:2], reverse=True)]
 
 
 # ---------------------------------------------------------------------------
 # Checkpoints
 # ---------------------------------------------------------------------------
-def save_checkpoint(out: Path, pop: Population, hof: list) -> None:
-    # HINT: one file per generation: out / "checkpoints" / f"gen_{pop.generation:05d}.pkl"
-    #       pickle.dump({"pop": pop, "hof": hof}, f)   (pop already holds rng, tracker, species)
-    #       write to a temp name first, then os.replace(tmp, final): a crash mid-write
-    #       can't corrupt the final file.  Then delete all but the newest KEEP_CHECKPOINTS.
-    raise NotImplementedError
+def save_checkpoint(out: Path, pop: Population, hof: HallOfFame) -> None:
+    """Pickle everything needed to resume (pop holds rng, tracker, species, stats)."""
+    ckpt_dir = out / "checkpoints"
+    final = ckpt_dir / f"gen_{pop.generation:05d}.pkl"
+    tmp = final.with_suffix(".tmp")
+    with open(tmp, "wb") as f:
+        pickle.dump({"pop": pop, "hof": hof}, f)
+    os.replace(tmp, final)                       # atomic: never a half-written .pkl
+    for old in sorted(ckpt_dir.glob("gen_*.pkl"))[:-KEEP_CHECKPOINTS]:
+        old.unlink()
 
 
-def load_latest_checkpoint(out: Path) -> tuple[Population, list]:
-    # HINT: sorted((out / "checkpoints").glob("gen_*.pkl"))[-1]; pickle.load; return pop, hof
-    raise NotImplementedError
+def load_latest_checkpoint(out: Path) -> tuple[Population, HallOfFame]:
+    latest = sorted((out / "checkpoints").glob("gen_*.pkl"))[-1]
+    with open(latest, "rb") as f:
+        data = pickle.load(f)
+    print(f"resumed from {latest}", flush=True)
+    return data["pop"], data["hof"]
 
 
 # ---------------------------------------------------------------------------
@@ -138,21 +194,23 @@ def main() -> None:
     out = Path(args.out)
     (out / "checkpoints").mkdir(parents=True, exist_ok=True)
 
-    # HINT, the whole loop:
-    #   pop, hof = load_latest_checkpoint(out) if args.resume else (Population(make_config(), args.seed), [])
-    #   with Pool(args.workers, initializer=_init_worker) as pool:
-    #       last = {}
-    #       fitness_fn = make_fitness_fn(pool, pop, last)
-    #       while pop.generation < args.generations:
-    #           t0 = time.time()
-    #           pop.run(fitness_fn, 1, snapshot_dir=str(out / "best"))   # exactly one generation
-    #           if pop.generation % HOF_EVERY == 0:
-    #               top = sorted(last["genomes"], key=lambda g: g.fitness, reverse=True)[:HOF_SIZE]
-    #               hof = update_hall_of_fame(hof, top, pool, pop.rng)
-    #           pop.save_stats(str(out / "stats.csv"))
-    #           save_checkpoint(out, pop, hof)
-    #           print(gen, best fitness, mean, n_species, seconds, flush=True)  # flush: log file
-    raise NotImplementedError
+    if args.resume:
+        pop, hof = load_latest_checkpoint(out)
+    else:
+        pop, hof = Population(make_config(), args.seed), HallOfFame()
+
+    with Pool(args.workers, initializer=_init_worker) as pool:
+        fitness_fn = make_fitness_fn(pool, pop, hof)      # hof is updated inside it
+        while pop.generation < args.generations:
+            t0 = time.time()
+            pop.run(fitness_fn, 1, snapshot_dir=str(out / "best"))   # exactly one generation
+            pop.save_stats(str(out / "stats.csv"))
+            save_checkpoint(out, pop, hof)
+            row = pop.stats[-1]
+            hof_best = hof.ranked()[0][0] if hof.heap else float("nan")
+            print(f"gen {row['gen']:5d}  best {row['best']:6.3f}  mean {row['mean']:6.3f}  "
+                  f"species {row['n_species']:3d}  hidden {row['mean_hidden']:5.2f}  "
+                  f"hof {hof_best:6.3f}  {time.time() - t0:5.1f}s", flush=True)
 
 
 if __name__ == "__main__":   # REQUIRED on Windows: Pool workers re-import this file

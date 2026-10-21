@@ -24,22 +24,67 @@ def test_env_random_policy():
     assert np.mean(scores) < -4                      # README: random ~ -4.87
 
 
+def _genomes(n=6):
+    from neat.population import Population
+    from run_slime import make_config
+    return Population(make_config(), 0).genomes[:n]
+
+
 def test_same_genome_same_seeds_same_fitness():
-    ...  # evaluate_genome((g, [1, 2])) twice -> identical tuples
+    from run_slime import evaluate_genome
+    g = _genomes(1)[0]
+    a = evaluate_genome((g, [1, 2]))
+    evaluate_genome((_genomes(2)[1], [7]))       # play something else in between
+    assert evaluate_genome((g, [1, 2])) == a     # opponent memory must not leak
 
 
 def test_parallel_equals_serial():
-    ...  # make_fitness_fn(None, ...) vs make_fitness_fn(Pool(2, initializer=_init_worker), ...)
-    #     on the same genomes; give both a Population with the same seed so seeds match
+    from multiprocessing import Pool
+    from run_slime import _init_worker, evaluate_genome
+    jobs = [(g, [3, 4]) for g in _genomes()]
+    serial = list(map(evaluate_genome, jobs))
+    with Pool(2, initializer=_init_worker) as pool:
+        parallel = pool.map(evaluate_genome, jobs)
+    assert parallel == serial
 
 
 def test_survival_bonus_never_beats_a_point():
-    ...  # with BETA < 1: (score+1) + BETA*0  >  score + BETA*1   for the worst case
+    from run_slime import BETA
+    assert BETA < 1
+    worst_with_point = (0 + 1) + BETA * 0 / 3000       # one more point, survived 0 steps
+    best_without = 0 + BETA * 3000 / 3000               # same score, survived the full game
+    assert worst_with_point > best_without
 
 
-def test_resume_matches_uninterrupted():
-    ...  # run 3 gens; vs run 2 gens, save, load, run 1 more -> same stats rows
+def test_resume_matches_uninterrupted(tmp_path, monkeypatch):
+    from neat.config import NeatConfig
+    from run_slime import HallOfFame, load_latest_checkpoint, make_fitness_fn, save_checkpoint
+    from neat.population import Population
+    import dataclasses
+    import run_slime
+    monkeypatch.setattr(run_slime, "EPISODES", 1)       # small and fast; restored after
+    cfg = dataclasses.replace(run_slime.make_config(), pop_size=12)
+    a, ha = Population(cfg, 0), HallOfFame()
+    a.run(make_fitness_fn(None, a, ha), 3)
+    b, hb = Population(cfg, 0), HallOfFame()
+    b.run(make_fitness_fn(None, b, hb), 2)
+    (tmp_path / "checkpoints").mkdir()
+    save_checkpoint(tmp_path, b, hb)
+    b, hb = load_latest_checkpoint(tmp_path)
+    b.run(make_fitness_fn(None, b, hb), 1)
+    assert a.stats == b.stats
 
 
-def test_hall_of_fame_sorted():
-    ...  # after update_hall_of_fame, scores are non-increasing and len <= HOF_SIZE
+def test_hall_of_fame_keeps_top_k_sorted():
+    from neat.config import NeatConfig
+    from neat.innovation import InnovationTracker
+    from neat.population import make_initial_population
+    from run_slime import HallOfFame
+    cfg = NeatConfig(num_inputs=12, num_outputs=3, pop_size=8)
+    gs = make_initial_population(cfg, InnovationTracker(15), np.random.default_rng(0))
+    hof = HallOfFame(size=3)
+    for score, g in zip([0.5, -1.0, 2.0, 2.0, 1.5, -3.0, 0.0, 4.0], gs):  # includes a tie
+        hof.add(score, g)
+    assert [s for s, _ in hof.ranked()] == [4.0, 2.0, 2.0]
+    hof.add(9.0, gs[7])                  # identical genome already kept -> ignored
+    assert len(hof.ranked()) == 3 and hof.ranked()[0][0] == 4.0
