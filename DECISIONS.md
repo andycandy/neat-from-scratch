@@ -74,3 +74,24 @@ The fitness is `(4 − Σ|y − ŷ|)²`, with a maximum of 16. A run stops at th
 - Per-generation statistics are in `experiments/results/xor_seed*.csv`.
 
 Reproduce with `uv run python experiments/xor.py`.
+
+---
+
+# Unit 4 — Slime Volleyball decisions
+
+Section numbers refer to the Unit 4 guide (`unit4_slimevolley.md`).
+
+1. **Environment: the game file is vendored** (`slime/slimevolley.py`, guide Option 2). Old gym does not install on Python 3.14. Only the `gym` dependency was removed (tiny stand-ins for `gym.Env` and `gym.spaces`; `env.seed` uses `np.random.RandomState`), and `cv2` and pyglet are imported lazily. The game physics, rules, observations and built-in AI are unchanged. Check: a random policy averages −4.8 over 20 games (README: −4.87). (§3)
+2. **Input scaling: none added** (`INPUT_SCALE = 1.0`). The environment already divides raw values by 10. Measured over 30 random games, every observation lies within ±6, and most within ±2.5 (the ball velocities are the widest). Values of order 1 do not saturate the activations. Any scaling here would be a fixed linear normalization, not feature engineering. (§4)
+3. **Outputs:** `tanh`, and a button is pressed when its output is > 0. The output activation is fixed. Evolution changes only hidden activations. (§4)
+4. **Hidden activations:** identity, sigmoid, tanh, relu, sin, gauss, abs and step. No gradients are needed, so `step` is allowed. (§4)
+5. **Fitness:** the mean over E games of `score + β · T / 3000`, with **β = 0.5**. Because β < 1, one extra point always outranks any survival difference (there is a test for this). The bonus only breaks ties early, when nearly every genome loses 5–0. All reporting uses the pure score. (§5)
+6. **Common random numbers:** each generation draws E = 4 game seeds from the run's rng, and every genome plays those same games. New seeds are drawn each generation. (§6.1)
+7. **Hall of fame:** every 10 generations, the top 5 genomes by fitness are re-evaluated on 20 fresh games and ranked by mean pure score. The best 5 ever are kept, in a min-heap of size 5 (the weakest kept genome sits at the root, so checking and evicting it is cheap). Identical genomes, which elitism re-sends, are stored once. It is saved in every checkpoint. (§6.2)
+8. **Training regime: direct play against the built-in AI**, not self-play. On the README leaderboard, the methods trained directly against the built-in AI scored clearly higher against it (CMA-ES 1.148, PPO 1.377) than the self-play versions (GA 0.353, CMA-ES −0.071, PPO −0.371). The deliverable is the score against the built-in AI. Self-play is future work. (§7)
+9. **Budget:** population 150, E = 4, 15 worker processes (16 logical CPUs − 1), and 14.4k steps/s per worker with a network attached (measured). The worst case (every game 3,000 steps) is about 8 s of compute per generation in theory. Early generations measured 4–6 s. (§9)
+10. **NEAT changes from the XOR config:** 12 inputs and 3 outputs, `tanh` output, the full activation set (+ identity, + step), `max_stagnation` 15 → 20 (noisy fitness), and a starting species threshold of 1.0 instead of 3.0. With 36 initial connections, generation-0 genomes differ only in weights (distance ≈ 0.3), so a threshold of 3.0 kept a single species for about 25 generations. At 1.0, species form by generation 5, and the dynamic threshold (target 8–12) takes it from there. (§10)
+
+**Fix found during the smoke test:** the built-in AI is a small RNN, and `env.reset()` does not reset its memory. Because each worker reuses one environment, a game's result depended on the worker's previous game, which broke both "same genome + same seeds = same fitness" and resume. `play` now calls `env.policy.reset()` at the start of every game. After the fix, an uninterrupted run and a stopped-and-resumed run give identical statistics, and parallel evaluation equals serial. Both are tested.
+
+**Checkpoints:** one per generation, written to a temporary file and then renamed (so a crash cannot leave a half-written file). The last 3 are kept. Each holds the population (rng, tracker, species, stats) and the hall of fame. Each generation's champion is also pickled to `best/gen_XXXX.pkl` for the complexification figures.

@@ -47,6 +47,8 @@ def make_config() -> NeatConfig:
         activations=("identity", "sigmoid", "tanh", "relu", "sin", "gauss", "abs", "step"),
         max_stagnation=20,                # noisy fitness: give species longer
         target_species=(8, 12),           # dynamic threshold aims at ~10 species
+        compat_threshold=1.0,             # gen-0 genomes differ only in weights (dist ~0.3);
+                                          # 3.0 would mean ~25 gens of a single species
     )
 
 
