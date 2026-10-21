@@ -1,8 +1,10 @@
 """Slime Volleyball with NEAT (Unit 4). Evolve against the built-in AI.
 
-Run:      uv run python experiments/slime.py --out runs/slime1
-Resume:   uv run python experiments/slime.py --out runs/slime1 --resume
+Run:      uv run python experiments/run_slime.py --out runs/slime1
+Resume:   uv run python experiments/run_slime.py --out runs/slime1 --resume
 """
+from __future__ import annotations   # lets `Pool | None` etc. appear in type hints
+
 import argparse
 import os
 import pickle
