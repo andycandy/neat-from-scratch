@@ -47,8 +47,14 @@ def make_config() -> NeatConfig:
         activations=("identity", "sigmoid", "tanh", "relu", "sin", "gauss", "abs", "step"),
         max_stagnation=20,                # noisy fitness: give species longer
         target_species=(8, 12),           # dynamic threshold aims at ~10 species
-        compat_threshold=1.0,             # gen-0 genomes differ only in weights (dist ~0.3);
-                                          # 3.0 would mean ~25 gens of a single species
+        # Speciation scale (see DECISIONS, Unit 4 #10). N = 1 always, as in Stanley's original
+        # code: dividing by N = 36 conns made a new node worth 0.03, below weight noise (~0.4).
+        # With N = 1: weight-only differences 0.33 avg / 0.45 max; one new node +1.0.
+        n_small_cutoff=10**9,             # i.e. never normalise by N
+        compat_threshold=3.0,             # Stanley's start value
+        threshold_step=0.3,               # Stanley's step
+        threshold_min=1.0,                # above weight noise: weights alone never split species
+        threshold_max=6.0,                # cap prevents controller windup
     )
 
 

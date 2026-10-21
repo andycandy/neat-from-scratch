@@ -3,7 +3,7 @@
 A record of what has been built so far, how it was checked, and what is left.
 Design decisions and their reasons are in [DECISIONS.md](DECISIONS.md).
 
-**Status (2026-10-21):** the NEAT core is complete, and XOR solves in 10 of 10 seeds. There are 41 passing tests. All Unit 2 modules exist, including the visualizer.
+**Status (2026-10-21):** the NEAT core is complete, and XOR solves in 10 of 10 seeds. There are 48 passing tests. All Unit 2 modules exist, including the visualizer.
 
 ## Setup
 
@@ -45,8 +45,10 @@ Design decisions and their reasons are in [DECISIONS.md](DECISIONS.md).
 - **Worst species always extinct:** after the fitness shift, the worst species scored 0 and got no children, including newborn species. Every surviving species is now guaranteed 2 children.
 - **Generations to solve:** this used to be the generation where fitness reached 15. It is now the first generation in which any genome is solved (`run(..., stop=solved)`).
 - **Dynamic threshold and snapshots:** added for Slime Volleyball, with tests.
+- **Speciation fix (found in the first Slime run):** the species count cycled 1 → 19 → 1. There were three causes: (1) dividing the distance by N = 36 made new structure nearly invisible; (2) the dynamic threshold had no cap (windup); (3) old species claimed their closest genome regardless of distance, so the threshold could never shrink the species count. The fixes are N = 1, `threshold_max`, and Stanley's "join the first compatible species, empty species die" rule. Afterwards the species count held at 10–12.
+- **Slime runner:** a vendored environment, parallel evaluation, a hall of fame (min-heap), atomic checkpoints and resume. Fixed the built-in AI's RNN memory leaking between games.
 
-## Test suite (41 tests)
+## Test suite (48 tests)
 
 | File | Covers |
 |---|---|
@@ -55,14 +57,15 @@ Design decisions and their reasons are in [DECISIONS.md](DECISIONS.md).
 | `test_network.py` | A hand-computed output. Batch results equal row-by-row results. A disabled connection has no effect. |
 | `test_mutation.py` | The parent is unchanged. Weights stay clipped. Mutation is deterministic for a seed. `reachable` follows disabled edges. 1,000 add-connection mutations never create a cycle. Add-node structure is correct. 2,000 chained mutations stay acyclic and runnable, and never target an input. |
 | `test_crossover.py` | Self-crossover returns the same genome. The child's innovations equal the fitter parent's. Every referenced node exists. Disabled genes are re-enabled about 25% of the time. Parents are unchanged. |
-| `test_species.py` | `δ(g, g) = 0`. Distance is symmetric. A hand-computed distance. Identical genomes form 1 species. Distant genomes form 2. Every genome is in exactly one species. |
+| `test_species.py` | `δ(g, g) = 0`. Distance is symmetric. A hand-computed distance. Identical genomes form 1 species. Distant genomes form 2. Every genome is in exactly one species. A higher threshold merges existing species into one. |
+| `test_slime.py` | The random policy scores about −5. The same genome and seeds give the same fitness, even after other games. Parallel equals serial. The survival bonus never outranks a point. Resume matches an uninterrupted run. The hall of fame keeps the top k, sorted, without duplicates. |
 | `test_reproduction.py` | Largest-remainder examples. Counts always sum to the total, including when all shares are 0. The child count equals the population size. Negative fitness still favours the better species. The elite survives unchanged. A culled species is not returned. The worst species still gets its minimum children. |
 
 ## XOR result
 
 - **Solved in 10 of 10 seeds** (0–9) within 300 generations.
-- **Generations to solve** (the first generation in which any genome has all four outputs on the correct side of 0.5): 15.3 ± 9.5 (range 6–34).
-- **Hidden nodes in the solutions:** 1–4.
+- **Generations to solve** (the first generation in which any genome has all four outputs on the correct side of 0.5): 18.1 ± 9.4 (range 6–40).
+- **Hidden nodes in the solutions:** 1–6.
 - The paper reports about 32 generations, but the settings differ, so this is a sanity check, not a like-for-like comparison.
 
 ## Remaining checklist

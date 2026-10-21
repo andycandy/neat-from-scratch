@@ -37,7 +37,7 @@ def adjust_threshold(cfg: NeatConfig, n_species: int) -> NeatConfig:
     lo, hi = cfg.target_species
     t = cfg.compat_threshold
     if n_species > hi:
-        t += cfg.threshold_step
+        t = min(cfg.threshold_max, t + cfg.threshold_step)
     elif n_species < lo:
         t = max(cfg.threshold_min, t - cfg.threshold_step)
     return dataclasses.replace(cfg, compat_threshold=t)   # cfg is frozen: build a new one

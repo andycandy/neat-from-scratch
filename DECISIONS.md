@@ -20,6 +20,9 @@ Section numbers refer to the Unit 2 build guide.
 
 ## Other choices
 
+- **Speciation rule (Stanley's, not neat-python's):** each genome joins the *first* species whose previous-generation representative is within the threshold, or founds a new species. Species with no members die. The new representative is the member closest to the old one. An earlier version followed neat-python, where every old species first claims its closest genome regardless of distance. Under that rule a species could never lose its last member through the threshold, so raising the threshold could not reduce the species count. The count only fell when whole cohorts stagnated together, and in the Slime run it cycled 1 → 19 → 1. With Stanley's rule, a higher threshold lets older species absorb newer ones. There is a test for this.
+- **Threshold cap:** `threshold_max` clamps the dynamic threshold, as in neat-python. Without it, the controller kept raising the threshold while it had no effect (integral windup), which then caused a long single-species phase.
+
 - **Stagnation is measured on best-ever fitness** per species (the paper's rule). neat-python uses mean fitness instead. A species is removed after `max_stagnation = 15` generations without improvement. The species that holds the best genome is never removed.
 - **Child counts:** every surviving species is guaranteed `min_species_size = 2` children. The rest are shared in proportion to each species' mean shifted fitness (fitness sharing) and rounded with the largest-remainder method, so the total is exactly the population size. Without the minimum, the shift gives the worst species a score of 0, so it, and any newborn species, would go extinct at once.
 - **Extinction:** species that are culled for stagnation or get no children are removed from the population's species list. They are not carried into the next speciation.
@@ -67,8 +70,8 @@ Section numbers refer to the Unit 2 build guide.
 The fitness is `(4 − Σ|y − ŷ|)²`, with a maximum of 16. A run stops at the first generation in which any genome is solved: all four outputs on the correct side of 0.5.
 
 - **Solved in 10 of 10 seeds** (seeds 0–9) within 300 generations.
-- **Generations to solve** (the first generation in which any genome is solved): mean 15.3 ± 9.5 (range 6–34).
-- **Hidden nodes in the solutions:** 1–4.
+- **Generations to solve** (the first generation in which any genome is solved): mean 18.1 ± 9.4 (range 6–40).
+- **Hidden nodes in the solutions:** 1–6.
 - The first solutions are often borderline: some outputs are close to 0.5, with fitness between 7 and 14. Running longer sharpens them.
 - **Comparison with the paper (about 32 generations):** the settings differ (per-node bias, different distance coefficients and mutation rates, a dynamic threshold, a different success definition), so this is a sanity check, not a like-for-like comparison.
 - Per-generation statistics are in `experiments/results/xor_seed*.csv`.
@@ -90,8 +93,10 @@ Section numbers refer to the Unit 4 guide (`unit4_slimevolley.md`).
 7. **Hall of fame:** every 10 generations, the top 5 genomes by fitness are re-evaluated on 20 fresh games and ranked by mean pure score. The best 5 ever are kept, in a min-heap of size 5 (the weakest kept genome sits at the root, so checking and evicting it is cheap). Identical genomes, which elitism re-sends, are stored once. It is saved in every checkpoint. (§6.2)
 8. **Training regime: direct play against the built-in AI**, not self-play. On the README leaderboard, the methods trained directly against the built-in AI scored clearly higher against it (CMA-ES 1.148, PPO 1.377) than the self-play versions (GA 0.353, CMA-ES −0.071, PPO −0.371). The deliverable is the score against the built-in AI. Self-play is future work. (§7)
 9. **Budget:** population 150, E = 4, 15 worker processes (16 logical CPUs − 1), and 14.4k steps/s per worker with a network attached (measured). The worst case (every game 3,000 steps) is about 8 s of compute per generation in theory. Early generations measured 4–6 s. (§9)
-10. **NEAT changes from the XOR config:** 12 inputs and 3 outputs, `tanh` output, the full activation set (+ identity, + step), `max_stagnation` 15 → 20 (noisy fitness), and a starting species threshold of 1.0 instead of 3.0. With 36 initial connections, generation-0 genomes differ only in weights (distance ≈ 0.3), so a threshold of 3.0 kept a single species for about 25 generations. At 1.0, species form by generation 5, and the dynamic threshold (target 8–12) takes it from there. (§10)
+10. **NEAT changes from the XOR config:** 12 inputs and 3 outputs, `tanh` output, the full activation set (+ identity, + step), and `max_stagnation` 15 → 20 (noisy fitness). **Speciation scale:** the distance is never divided by N (N = 1 always, as in Stanley's original code). Slime genomes start with 36 connections, so dividing by N made a whole new hidden node worth about 0.03, below the weight noise (≈ 0.4). Structure was then invisible to speciation. Measured with N = 1: weight-only differences average 0.33 (max 0.45), and one new node adds 1.0. The threshold starts at 3.0 and moves in steps of 0.3 (Stanley's values), within [1.0, 6.0]. The floor of 1.0 sits above weight noise, so weights alone never split species. In a 40-generation check, the species count stayed at 10–12 for over 25 generations, with the threshold steady at 3.3. (§10)
 
 **Fix found during the smoke test:** the built-in AI is a small RNN, and `env.reset()` does not reset its memory. Because each worker reuses one environment, a game's result depended on the worker's previous game, which broke both "same genome + same seeds = same fitness" and resume. `play` now calls `env.policy.reset()` at the start of every game. After the fix, an uninterrupted run and a stopped-and-resumed run give identical statistics, and parallel evaluation equals serial. Both are tested.
+
+**First overnight run (`runs/slime1`, kept as the "before" run):** generations 0–170 with the old speciation (neat-python rule, N = 36, no threshold cap). The species count cycled 1 → 17 → 1 → 19 → 1 instead of settling. That led to the speciation fixes above. The best score reached −3.37, and the hall of fame was at −4.50.
 
 **Checkpoints:** one per generation, written to a temporary file and then renamed (so a crash cannot leave a half-written file). The last 3 are kept. Each holds the population (rng, tracker, species, stats) and the hall of fame. Each generation's champion is also pickled to `best/gen_XXXX.pkl` for the complexification figures.

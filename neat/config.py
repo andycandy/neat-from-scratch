@@ -27,4 +27,5 @@ class NeatConfig:
     target_species: tuple[int, int] = (8, 12)
     threshold_step: float = 0.1
     threshold_min: float = 0.3
+    threshold_max: float = 10.0       # cap: without it the controller winds up (see DECISIONS)
     min_species_size: int = 2         # children guaranteed to every surviving species

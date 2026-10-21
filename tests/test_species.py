@@ -54,3 +54,15 @@ def test_everyone_in_exactly_one_species():
     species, _ = speciate(gs, species, CFG, 1, 100)   # second round reuses old species
     members = [id(g) for s in species for g in s.members]
     assert len(members) == len(gs) and set(members) == {id(g) for g in gs}
+
+
+def test_higher_threshold_merges_species():
+    import dataclasses
+    from neat.species import speciate
+    gs = [make({i: 0.0 for i in range(k + 1)}) for k in range(0, 40, 3)]   # increasingly different
+    low = dataclasses.replace(CFG, compat_threshold=1.0)
+    species, key = speciate(gs, [], low, 0, 0)
+    n_low = len(species)
+    high = dataclasses.replace(CFG, compat_threshold=100.0)
+    species, _ = speciate(gs, species, high, 1, key)                       # same genomes, old species
+    assert n_low > 1 and len(species) == 1                                 # all absorbed into the first

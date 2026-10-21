@@ -39,17 +39,16 @@ class Species:
 
 def speciate(genomes: list[Genome], species_list: list[Species], cfg: NeatConfig,
              generation: int, next_key: int) -> tuple[list[Species], int]:
-    """Assign every genome to exactly one species. Returns (species, next_key)."""
-    unassigned = list(genomes)
+    """Assign every genome to exactly one species. Returns (species, next_key).
+
+    Stanley's rule: each genome joins the FIRST species whose (previous-generation)
+    representative is within the threshold, else founds a new species. Species left
+    with no members die. So a higher threshold lets older species absorb newer ones,
+    which is what lets the dynamic threshold actually reduce the species count."""
     for s in species_list:
         s.members = []
-        if len(unassigned) == 0: continue
-        closest = min(unassigned, key=lambda g: compatibility_distance(g, s.representative, cfg))
-        s.representative = closest
-        s.members.append(closest)
-        unassigned = [g for g in unassigned if g is not closest]  # by identity, not ==
 
-    for g in unassigned:
+    for g in genomes:
         joined = False
         for s in species_list:
             if (compatibility_distance(g, s.representative, cfg) < cfg.compat_threshold):
@@ -68,4 +67,6 @@ def speciate(genomes: list[Genome], species_list: list[Species], cfg: NeatConfig
             next_key += 1
 
     species_list = [s for s in species_list if s.members]
+    for s in species_list:   # next generation compares against the member closest to the old rep
+        s.representative = min(s.members, key=lambda g: compatibility_distance(g, s.representative, cfg))
     return species_list, next_key

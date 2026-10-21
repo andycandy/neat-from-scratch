@@ -43,6 +43,8 @@ def test_adjust_threshold():
     assert adjust_threshold(cfg, 10).compat_threshold == 1.0      # in range -> keep
     low = NeatConfig(num_inputs=2, num_outputs=1, compat_threshold=0.3)
     assert adjust_threshold(low, 1).compat_threshold == 0.3       # clamped at min
+    high = NeatConfig(num_inputs=2, num_outputs=1, compat_threshold=2.0, threshold_max=2.0)
+    assert adjust_threshold(high, 50).compat_threshold == 2.0     # clamped at max (no windup)
 
 
 def test_threshold_pulls_species_into_range():
