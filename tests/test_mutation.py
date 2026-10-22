@@ -90,7 +90,7 @@ def test_add_node_structure_and_parent_untouched():
 def test_2000_mutations_stay_valid():
     from neat.innovation import InnovationTracker
     from neat.mutation import mutate
-    from neat.network import topo_order, compile_genome, run
+    from neat.network import compile_genome, run, topo_order
     from neat.population import make_initial_population
     cfg = NeatConfig(num_inputs=2, num_outputs=1, pop_size=1, p_add_node=0.3, p_add_conn=0.3,
                      p_toggle=0.2, p_activation=0.2)
@@ -98,7 +98,6 @@ def test_2000_mutations_stay_valid():
     rng = np.random.default_rng(0)
     g = make_initial_population(cfg, tracker, rng)[0]
     for _ in range(2000):
-        parent = (dict(g.nodes), dict(g.conns), dict(g.conns_broken))
         g = mutate(g, cfg, tracker, rng)
         topo_order(g.nodes, g.conns.values())                    # raises on cycle
         assert all(c.src in g.nodes and c.dest in g.nodes for c in g.conns.values())

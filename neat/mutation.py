@@ -1,9 +1,10 @@
 import dataclasses
 
 import numpy as np
-from neat.innovation import InnovationTracker
+
 from neat.config import NeatConfig
-from neat.genes import ConnGene, Genome, NodeGene, NodeType, NodeGene
+from neat.genes import ConnGene, Genome, NodeGene, NodeType
+from neat.innovation import InnovationTracker
 
 
 def _mutate_value(old: float, cfg: NeatConfig, rng: np.random.Generator) -> float:

@@ -12,12 +12,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from backprop import train  # noqa: E402
-from backprop.datasets import make_splits  # noqa: E402
-from backprop.padded import ACT_NAMES  # noqa: E402
-from neat.config import NeatConfig  # noqa: E402
-from neat.genes import NodeType  # noqa: E402
-from neat.population import Population  # noqa: E402
+from backprop import train
+from backprop.datasets import make_splits
+from backprop.padded import ACT_NAMES
+from neat.config import NeatConfig
+from neat.genes import NodeType
+from neat.population import Population
 
 
 def make_config() -> NeatConfig:

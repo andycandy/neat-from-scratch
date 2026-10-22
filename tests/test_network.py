@@ -1,4 +1,5 @@
 import numpy as np
+
 from neat.genes import ConnGene, Genome, NodeGene, NodeType
 from neat.network import compile_genome, run
 

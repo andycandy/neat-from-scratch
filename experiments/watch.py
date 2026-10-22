@@ -6,30 +6,30 @@ uv run python experiments/watch.py --run runs/slime3 --seed 123      # one speci
   --rank 0 = best hall-of-fame agent (1 = second best, ...)
 """
 import argparse
-import pickle
 import sys
 from pathlib import Path
 
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-from matplotlib.animation import FuncAnimation, PillowWriter  # noqa: E402
-from matplotlib.patches import Circle, Rectangle, Wedge  # noqa: E402
-import numpy as np  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.animation import FuncAnimation, PillowWriter
+from matplotlib.patches import Circle, Rectangle, Wedge
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from neat.network import compile_genome, run  # noqa: E402
-import __main__  # noqa: E402
-import run_slime  # noqa: E402
-from run_slime import load_latest_checkpoint, play  # noqa: E402
+import run_slime
+from run_slime import load_latest_checkpoint, play
+
+import __main__
+from neat.network import compile_genome, run
 
 # checkpoints were written by run_slime.py running AS __main__, so pickle recorded
 # the class as __main__.HallOfFame; point that name at the real class before loading
 __main__.HallOfFame = run_slime.HallOfFame
-from slime.slimevolley import SlimeVolleyEnv  # noqa: E402
+from slime.slimevolley import SlimeVolleyEnv
 
 
 def record_game(genome, seed: int):

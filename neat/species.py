@@ -4,13 +4,6 @@ from dataclasses import dataclass
 from neat.config import NeatConfig
 from neat.genes import Genome
 
-@dataclass
-class Species:
-    key: int
-    representative: Genome
-    members: list[Genome]
-    best_fitness: float
-    last_improved: int
 
 def compatibility_distance(a: Genome, b: Genome, cfg: NeatConfig) -> float:
     c1, c2, c3 = cfg.distance_coefficients

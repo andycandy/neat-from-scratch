@@ -1,5 +1,4 @@
 """Unit 3 §18 equivalence tests for backprop/padded.py. They fail until pack/forward/unpack exist."""
-import dataclasses
 
 import numpy as np
 import pytest

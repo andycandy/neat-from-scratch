@@ -43,7 +43,7 @@ def test_children_equal_pop_size():
     from neat.reproduction import reproduce
     for seed in range(20):
         r = np.random.default_rng(seed)
-        cfg, t, rng, sp = _setup(lambda k, j: float(r.normal(0, 5)), n_species=int(r.integers(1, 6)),
+        cfg, t, rng, sp = _setup(lambda k, j, r=r: float(r.normal(0, 5)), n_species=int(r.integers(1, 6)),
                                  per=int(r.integers(1, 12)), seed=seed)
         kids, _, _ = reproduce(sp, cfg, t, rng, generation=1, next_key=1000)
         assert len(kids) == cfg.pop_size

@@ -58,6 +58,7 @@ def test_everyone_in_exactly_one_species():
 
 def test_higher_threshold_merges_species():
     import dataclasses
+
     from neat.species import speciate
     gs = [make({i: 0.0 for i in range(k + 1)}) for k in range(0, 40, 3)]   # increasingly different
     low = dataclasses.replace(CFG, compat_threshold=1.0)

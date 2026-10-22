@@ -12,15 +12,15 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from backprop.datasets import make_splits  # noqa: E402
-from backprop.train import accuracy  # noqa: E402
-from neat.network import compile_genome, run  # noqa: E402
-from neat.visualize import draw_genome  # noqa: E402
+from backprop.datasets import make_splits
+from backprop.train import accuracy
+from neat.network import compile_genome, run
+from neat.visualize import draw_genome
 
 RUNS = Path("runs/backprop")
 OUT = Path("figures/backprop")
@@ -88,7 +88,8 @@ def complexification():
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     for row in [boundary_and_architecture(d) for d in ("circle", "xor", "spiral")]:
-        print("dataset %-6s seed %d  test acc %.3f  hidden %d  connections %d" % row)
+        d, seed, acc, hidden, conns = row
+        print(f"dataset {d:<6} seed {seed}  test acc {acc:.3f}  hidden {hidden}  connections {conns}")
     complexification()
     print(f"saved figures in {OUT}")
 

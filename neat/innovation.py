@@ -1,4 +1,6 @@
 from neat.genes import Genome
+
+
 class InnovationTracker: 
     def __init__(self, first_hidden_id: int):
         self.conn_registry : dict[tuple[int,int],int] = {}

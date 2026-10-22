@@ -1,4 +1,5 @@
 import numpy as np
+
 from neat.config import NeatConfig
 from neat.innovation import InnovationTracker
 from neat.population import make_initial_population
@@ -28,6 +29,7 @@ def test_same_seed_same_run():
 
 def test_pickle_roundtrip_keeps_run_state():
     import pickle
+
     from neat.population import Population
     cfg = NeatConfig(num_inputs=2, num_outputs=1, pop_size=20)
     p = Population(cfg, 1)
@@ -71,9 +73,9 @@ def test_champ_and_stats_columns(tmp_path):
 
 
 def test_draw_genome_writes_png(tmp_path):
-    from neat.population import make_initial_population
     from neat.innovation import InnovationTracker
     from neat.mutation import mutate
+    from neat.population import make_initial_population
     from neat.visualize import draw_genome
     cfg = NeatConfig(num_inputs=2, num_outputs=1, pop_size=1, p_add_node=0.5, p_toggle=0.2)
     t, rng = InnovationTracker(3), np.random.default_rng(0)

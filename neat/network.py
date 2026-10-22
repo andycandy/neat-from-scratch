@@ -1,8 +1,10 @@
 from collections import deque
+
 import numpy as np
 
 from neat.activations import ACTIVATIONS
 from neat.genes import Genome, NodeType
+
 
 def topo_order(node_ids, conns):
     indeg = {n: 0 for n in node_ids}

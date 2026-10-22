@@ -18,14 +18,15 @@ import optax
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from backprop import train  # noqa: E402
-from backprop.datasets import make_splits  # noqa: E402
-from neat.genes import Genome, NodeType  # noqa: E402
-from neat.innovation import InnovationTracker  # noqa: E402
-from neat.mutation import mutate  # noqa: E402
-from neat.network import topo_order  # noqa: E402
-from neat.population import make_initial_population  # noqa: E402
-from run_backprop import make_config  # noqa: E402
+from run_backprop import make_config
+
+from backprop import train
+from backprop.datasets import make_splits
+from neat.genes import Genome, NodeType
+from neat.innovation import InnovationTracker
+from neat.mutation import mutate
+from neat.network import topo_order
+from neat.population import make_initial_population
 
 N_GENOMES = 20
 ACT = {"identity": lambda s: s, "sigmoid": jax.nn.sigmoid, "tanh": jnp.tanh,

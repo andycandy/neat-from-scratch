@@ -13,3 +13,6 @@ dependencies = [
 dev = [
     "pytest>=9.1.1",
 ]
+
+[tool.ruff]
+extend-exclude = ["slime/slimevolley.py"]   # vendored game code, kept as upstream

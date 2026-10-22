@@ -2,10 +2,10 @@
 import matplotlib
 
 matplotlib.use("Agg")                     # render to file, never open a window
-import matplotlib.pyplot as plt  # noqa: E402
+import matplotlib.pyplot as plt
 
-from neat.genes import Genome, NodeType  # noqa: E402
-from neat.network import topo_order  # noqa: E402
+from neat.genes import Genome, NodeType
+from neat.network import topo_order
 
 ACT_COLOURS = {
     None: "lightgray",                    # inputs

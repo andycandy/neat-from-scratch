@@ -6,7 +6,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "experiments"))
 
-from slime.slimevolley import SlimeVolleyEnv  # noqa: E402
+from slime.slimevolley import SlimeVolleyEnv
 
 
 def test_env_random_policy():
@@ -25,8 +25,9 @@ def test_env_random_policy():
 
 
 def _genomes(n=6):
-    from neat.population import Population
     from run_slime import make_config
+
+    from neat.population import Population
     return Population(make_config(), 0).genomes[:n]
 
 
@@ -40,6 +41,7 @@ def test_same_genome_same_seeds_same_fitness():
 
 def test_parallel_equals_serial():
     from multiprocessing import Pool
+
     from run_slime import evaluate_genome
     jobs = [(g, [3, 4, 5], 2) for g in _genomes()]
     serial = list(map(evaluate_genome, jobs))
@@ -56,8 +58,9 @@ def test_survival_bonus_never_beats_a_point():
 def test_returns_counted_for_a_real_player():
     """Drive OUR side with the built-in AI's own policy: it rallies, so returns must be > 0;
     a frozen agent (no buttons) never touches the ball, so returns must be 0."""
-    from slime.slimevolley import BaselinePolicy
     import run_slime
+
+    from slime.slimevolley import BaselinePolicy
 
     class PolicyNet:            # stand-in for a compiled network
         def __init__(self, policy): self.policy = policy
@@ -78,11 +81,17 @@ def test_returns_counted_for_a_real_player():
 
 
 def test_resume_matches_uninterrupted(tmp_path, monkeypatch):
-    from neat.config import NeatConfig
-    from run_slime import HallOfFame, load_latest_checkpoint, make_fitness_fn, save_checkpoint
-    from neat.population import Population
     import dataclasses
+
     import run_slime
+    from run_slime import (
+        HallOfFame,
+        load_latest_checkpoint,
+        make_fitness_fn,
+        save_checkpoint,
+    )
+
+    from neat.population import Population
     monkeypatch.setattr(run_slime, "EPISODES", 2)       # small and fast; restored after
     monkeypatch.setattr(run_slime, "MIRROR_GAMES", 1)   # 1 mirror + 1 AI game
     cfg = dataclasses.replace(run_slime.make_config(), pop_size=12)
@@ -98,10 +107,11 @@ def test_resume_matches_uninterrupted(tmp_path, monkeypatch):
 
 
 def test_hall_of_fame_keeps_top_k_sorted():
+    from run_slime import HallOfFame
+
     from neat.config import NeatConfig
     from neat.innovation import InnovationTracker
     from neat.population import make_initial_population
-    from run_slime import HallOfFame
     cfg = NeatConfig(num_inputs=12, num_outputs=3, pop_size=8)
     gs = make_initial_population(cfg, InnovationTracker(15), np.random.default_rng(0))
     hof = HallOfFame(size=3)
@@ -114,8 +124,9 @@ def test_hall_of_fame_keeps_top_k_sorted():
 
 def test_play_batch_matches_play_on_ai_games():
     """Lockstep batching must not change anything: same results as one game at a time."""
-    from neat.network import compile_genome
     from run_slime import _envs, play, play_batch
+
+    from neat.network import compile_genome
     for g in _genomes(3):
         net = compile_genome(g)
         seeds = [11, 12, 13, 14]
@@ -124,8 +135,9 @@ def test_play_batch_matches_play_on_ai_games():
 
 
 def test_mirror_games_run_and_are_deterministic():
-    from neat.network import compile_genome
     from run_slime import _envs, play_batch
+
+    from neat.network import compile_genome
     net = compile_genome(_genomes(1)[0])
     res = play_batch(net, _envs(6), list(range(6)), 6)
     assert all(-5 <= r[0] <= 5 and r[1] > 0 for r in res)       # real games were played

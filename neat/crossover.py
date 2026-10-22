@@ -1,8 +1,10 @@
 import dataclasses
+
 import numpy as np
 
 from neat.config import NeatConfig
 from neat.genes import Genome
+
 
 def _pick_one_parent(a: Genome, b: Genome, rng: np.random.Generator) -> Genome:
     return a if rng.random() < 0.5 else b

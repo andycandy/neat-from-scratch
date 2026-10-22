@@ -19,7 +19,7 @@ def test_training_reduces_loss_and_learns_circle():
     W, b, before, _ = (np.asarray(v) for v in train.train_population(*arrays, X, y, X, y))
     # train again from the trained weights: loss must be lower than the first evaluation
     arrays[0], arrays[2] = W, b
-    _, _, after, acc = (np.asarray(v) for v in train.train_population(*arrays, X, y, X, y))
+    _, _, after, _ = (np.asarray(v) for v in train.train_population(*arrays, X, y, X, y))
     assert after.mean() < before.mean()
 
 

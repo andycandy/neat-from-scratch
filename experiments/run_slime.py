@@ -16,11 +16,11 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from neat.config import NeatConfig  # noqa: E402
-from neat.genes import NodeType  # noqa: E402
-from neat.network import compile_genome, run  # noqa: E402
-from neat.population import Population  # noqa: E402
-from slime.slimevolley import SlimeVolleyEnv  # noqa: E402
+from neat.config import NeatConfig
+from neat.genes import NodeType
+from neat.network import compile_genome, run
+from neat.population import Population
+from slime.slimevolley import SlimeVolleyEnv
 
 SURVIVAL_A = 0.75      # max survival bonus per rally (< 1: a point always beats a rally)
 SURVIVAL_TAU = 300     # steps (10 s) for the survival bonus to saturate
@@ -201,7 +201,7 @@ def save_checkpoint(out, pop, hof):
 
 
 def load_latest_checkpoint(out):
-    latest = sorted((out / "checkpoints").glob("gen_*.pkl"))[-1]
+    latest = max((out / "checkpoints").glob("gen_*.pkl"))
     with open(latest, "rb") as f:
         data = pickle.load(f)
     print(f"resumed from {latest}", flush=True)

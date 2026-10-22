@@ -4,9 +4,9 @@ Every genome becomes arrays of the SAME shape, so one compiled function trains t
 whole population with vmap. Positions follow a topological order, so W and M are
 strictly upper triangular (i < j): no cycles, and not-yet-computed positions are 0.
 """
-import jax
 from dataclasses import dataclass, replace
 
+import jax
 import jax.numpy as jnp
 import numpy as np
 

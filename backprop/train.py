@@ -65,7 +65,7 @@ def make_fitness_fn(splits: dict):
 
     def fitness_fn(genomes: list[Genome]) -> np.ndarray:
         packs, (W, M, b, act, out_idx) = stack(genomes)
-        W_t, b_t, val_loss, val_acc = train_population(W, M, b, act, out_idx, X_tr, y_tr, X_val, y_val)
+        W_t, b_t, _, val_acc = train_population(W, M, b, act, out_idx, X_tr, y_tr, X_val, y_val)
         W_t, b_t = np.asarray(W_t), np.asarray(b_t)
         for i, g in enumerate(genomes):                  # Lamarckian: children inherit trained weights
             trained = unpack(g, packs[i], W_t[i], b_t[i])

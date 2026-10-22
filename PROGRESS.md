@@ -72,8 +72,8 @@ Design decisions and their reasons are in [DECISIONS.md](DECISIONS.md).
 
 **Unit 2**
 - [x] `neat/visualize.py`: `draw_genome` (depth layout, colour by activation, edge colour by sign and width by |w|, disabled edges dashed). Every XOR run saves `experiments/results/xor_seed*.png`.
-- [ ] `ruff check` passes.
-- [ ] Remove the leftover scratch file `neat/test.py`.
+- [x] `ruff check` passes (vendored `slime/slimevolley.py` excluded).
+- [x] Remove the leftover scratch file `neat/test.py`.
 - [ ] Add XOR results to the write-up doc.
 - [ ] Write the reason for the distance coefficients in DECISIONS.md, decision 8.
 
@@ -83,8 +83,9 @@ Design decisions and their reasons are in [DECISIONS.md](DECISIONS.md).
 - [x] Fitness with shaping, shared seeds per generation, hall of fame (min-heap).
 - [x] Parallel evaluation. Checkpoints with atomic writes, and resume (tested identical to an uninterrupted run).
 - [x] `experiments/watch.py`: searches fresh seeds and saves a GIF of an agent's best game, plus button-usage statistics.
-- [ ] Decide on and launch the next run (evaluation noise fix).
-- [ ] Friday: final evaluation, GIFs, network diagrams, plots.
+- [x] Decide on and launch the next run: `slime5` (self-play + lockstep batching).
+- [x] Final evaluation (`experiments/eval_slime.py`): best of top-5 hall of fame on 200 games, then 1,000 new games: −0.852 ± 1.260, win 11.8%, draw 31.0%, loss 57.2%.
+- [ ] Figures from `runs/slime5/stats.csv`, network diagram of the best agent, GIF (`runs/slime5/gen00786_rank0_seed10014.gif`).
 
 ## Slime runs
 
@@ -94,3 +95,4 @@ Design decisions and their reasons are in [DECISIONS.md](DECISIONS.md).
 | `runs/slime2` | 0–871 | speciation fixed | Species stable at 9–13, but the population converged on fence-camping. Fitness standard deviation was 0.086 (no signal), and there were 90 hidden nodes (bloat). Hall of fame −4.55. |
 | `runs/slime3` | 0–256 | fitness v2: per-rally survival bonus, returns over the net, node penalty | Agents became active (moving, jumping) and then plateaued: returns about 0.6 per game, hall of fame −4.60. Diagnosis: with 4 games per genome, rankings on two different 4-game sets barely agree (Spearman +0.13), so selection is close to random. |
 | `runs/slime4` | 0–243 | `slime3` + 16 games per genome, node penalty 0.01 (noise ablation) | Hall of fame −4.95 → −4.55 by generation 68, then frozen until it was stopped; returns 0.5–0.8; bloat controlled at first, 16 hidden nodes by the end. Noise was only part of the problem. Next idea: self-play. |
+| `runs/slime5` | 0–1670 (stopped) | 12 self-play (mirror) + 4 built-in AI games per genome; lockstep batching (4× faster) | Hall of fame −4.65 → −0.70 by generation 786, then flat for ~770 generations. 100 fresh games: −1.14, 18.8 returns per game, best game +2. Final, 1,000 new games: −0.852 ± 1.260, win rate 11.8%. Leaderboard self-play: CMA-ES −0.071, GA +0.353. |
