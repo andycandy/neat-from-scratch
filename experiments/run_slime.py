@@ -34,6 +34,8 @@ RETURN_GAMMA = 0.2         # per return (we touched the ball, then it crossed to
 NODE_LAMBDA = 0.01         # per hidden node (0.002 -> 0.01): 50 nodes cost 0.5, structure must pay
 TOUCH_MARGIN = 0.3         # the game pushes the ball just outside the agent after a bounce
 EPISODES = 16              # E: games per genome per generation (4 -> 16: see DECISIONS, slime4)
+MIRROR_GAMES = 12          # of those, games vs ITSELF (cooperative self-play: rally length + returns);
+                           # the other EPISODES - MIRROR_GAMES are vs the built-in AI (real score)
 INPUT_SCALE = 1.0          # TODO step 2: fixed divisor(s) after measuring obs ranges
                            #   (the env ALREADY divides raw values by 10 internally)
 HOF_SIZE = 5               # hall of fame: keep this many
@@ -66,72 +68,117 @@ def make_config() -> NeatConfig:
 # ---------------------------------------------------------------------------
 # Playing (runs inside worker processes)
 # ---------------------------------------------------------------------------
-_ENV: SlimeVolleyEnv | None = None   # one env per worker process, made by _init_worker
+_ENVS: list[SlimeVolleyEnv] = []     # per worker process: one env per game played in lockstep
 
 
 def _init_worker() -> None:
-    """Pool initializer: create the environment once per worker."""
-    global _ENV
-    _ENV = SlimeVolleyEnv()
+    """Pool initializer: create the environments once per worker."""
+    _envs(EPISODES)
+
+
+def _envs(n: int) -> list[SlimeVolleyEnv]:
+    """At least n environments for this process (created once, then reused)."""
+    while len(_ENVS) < n:
+        _ENVS.append(SlimeVolleyEnv())
+    return _ENVS[:n]
+
+
+class Tracker:
+    """Bookkeeping for OUR agent (the right one) in one game: score, steps, returns, survival."""
+
+    def __init__(self, env: SlimeVolleyEnv) -> None:
+        self.env, self.me = env, env.game.agent_right
+        self.touch_dist2 = (self.me.r + 0.5 + TOUCH_MARGIN) ** 2    # ball radius 0.5
+        self.score, self.steps, self.returns, self.rally, self.survival = 0.0, 0, 0, 0, 0.0
+        self.touched, self.prev_bx = False, env.game.ball.x
+
+    def update(self, reward: float) -> None:
+        """Call once after every env.step."""
+        ball = self.env.game.ball
+        self.score += reward
+        self.steps += 1
+        self.rally += 1
+        if (ball.x - self.me.x) ** 2 + (ball.y - self.me.y) ** 2 < self.touch_dist2:
+            self.touched = True
+        if self.touched and self.prev_bx > 0 > ball.x:          # crossed to the other side
+            self.returns += 1
+            self.touched = False
+        self.prev_bx = ball.x
+        if reward != 0:                                          # a point ended this rally
+            self.survival += SURVIVAL_A * (1 - np.exp(-self.rally / SURVIVAL_TAU))
+            self.rally, self.touched = 0, False
+            self.prev_bx = self.env.game.ball.x                  # ball re-served at the net
+
+    def result(self) -> tuple[float, int, int, float]:
+        survival = self.survival
+        if self.rally > 0:                                       # unfinished last rally
+            survival += SURVIVAL_A * (1 - np.exp(-self.rally / SURVIVAL_TAU))
+        return self.score, self.steps, self.returns, survival
 
 
 def play(net, env: SlimeVolleyEnv, seed: int) -> tuple[float, int, int, float]:
-    """One full game against the built-in AI.
-    Returns (pure score, steps, returns over the net, survival bonus summed over rallies).
-    `net` is the result of compile_genome(genome)."""
+    """One game vs the built-in AI, stepped on its own (used by watch.py, and the reference
+    that play_batch must match). Returns (pure score, steps, returns, survival bonus)."""
     env.seed(seed)       # BEFORE env.reset(): an unseeded env uses global np.random
     obs = env.reset()
-    env.policy.reset()   # built-in AI is an RNN: env.reset() does NOT clear its memory,
-                         # so without this a game depends on the worker's previous game
-    me = env.game.agent_right                     # our agent (same object all game)
-    touch_dist2 = (me.r + 0.5 + TOUCH_MARGIN) ** 2  # ball radius 0.5
-    done = False
-    total, step = 0.0, 0
-    returns, rally, survival, touched = 0, 0, 0.0, False
-    prev_bx = env.game.ball.x
+    env.policy.reset()   # built-in AI is an RNN: env.reset() does NOT clear its memory
+    track, done = Tracker(env), False
     while not done:
-        out = run(net, obs[None, :] / INPUT_SCALE)[0]
-        action = (out > 0).astype(int)
-        obs, reward, done, info = env.step(action)
-        total += reward
-        step += 1
-        rally += 1
-        ball = env.game.ball
-        if (ball.x - me.x) ** 2 + (ball.y - me.y) ** 2 < touch_dist2:
-            touched = True
-        if touched and prev_bx > 0 > ball.x:      # crossed from our side to the AI's side
-            returns += 1
-            touched = False
-        prev_bx = ball.x
-        if reward != 0:                           # a point ended this rally
-            survival += SURVIVAL_A * (1 - np.exp(-rally / SURVIVAL_TAU))
-            rally, touched = 0, False
-            prev_bx = env.game.ball.x              # ball was re-served at the net
-    if rally > 0:                                 # unfinished last rally (3000-step limit)
-        survival += SURVIVAL_A * (1 - np.exp(-rally / SURVIVAL_TAU))
-    return total, step, returns, survival
+        action = (run(net, obs[None, :] / INPUT_SCALE)[0] > 0).astype(int)
+        obs, reward, done, _ = env.step(action)
+        track.update(reward)
+    return track.result()
 
 
-def evaluate_genome(args: tuple[Genome, list[int]]) -> tuple[float, list[float], list[int], list[int]]:
-    """Worker job: (genome, seeds) -> (fitness, per-episode pure scores, lengths, returns).
-    fitness = mean over games of (score + survival bonus + RETURN_GAMMA * returns)
-              - NODE_LAMBDA * hidden nodes.
-    Must depend ONLY on (genome, seeds), so parallel == serial."""
-    genome, seeds = args
-    net = compile_genome(genome=genome)
-    scores = []
-    steps = []
-    rets = []
-    fitness = 0.0
-    if _ENV is None: _init_worker()
-    for s in seeds:
-        score, step, returns, survival = play(net=net, env=_ENV, seed=s)
-        scores.append(score)
-        steps.append(step)
-        rets.append(returns)
-        fitness += score + survival + RETURN_GAMMA * returns
+def play_batch(net, envs: list[SlimeVolleyEnv], seeds: list[int],
+               mirror: list[bool]) -> list[tuple[float, int, int, float]]:
+    """Play len(seeds) games IN LOCKSTEP: every step, ONE network call for all active games.
+    mirror[k] True  -> game k is our genome vs ITSELF (both sides use `net`)
+    mirror[k] False -> game k is our genome vs the built-in AI
+    Returns one (score, steps, returns, survival) per game, from the RIGHT agent's view.
+    Must give exactly the same results as play() for the built-in-AI games."""
+    games = []
+    for env, seed in zip(envs, seeds):
+        env.seed(seed)
+        obs = env.reset()
+        env.policy.reset()
+        games.append({"env": env, "obs_r": obs, "obs_l": obs,   # both sides see the same at t=0
+                      "track": Tracker(env), "done": False})
+
+    while not all(g["done"] for g in games):
+        # ---------------------------------------------------------------- YOUR CODE
+        # 1. Collect observations of every ACTIVE game into one list `rows`:
+        #      the right agent's obs_r always; ALSO obs_l if that game is a mirror game.
+        #    Remember which row is which, e.g. a list `who` of (game index, "r" or "l").
+        # 2. ONE network call for all rows:
+        #      acts = (run(net, np.stack(rows) / INPUT_SCALE) > 0).astype(int)   # (rows, 3)
+        # 3. For each active game k (look up its rows in `who`):
+        #      mirror:  obs_r, reward, done, info = env.step(a_r, a_l);  g["obs_l"] = info["otherObs"]
+        #      vs AI:   obs_r, reward, done, info = env.step(a_r)
+        #      g["obs_r"] = obs_r;  g["track"].update(reward);  g["done"] = done
+        raise NotImplementedError
+        # --------------------------------------------------------------------------
+
+    return [g["track"].result() for g in games]
+
+
+def evaluate_genome(args: tuple[Genome, list[int], int]) -> tuple[float, list[float], list[int], list[int]]:
+    """Worker job: (genome, seeds, n_mirror). The first n_mirror games are vs itself, the rest
+    vs the built-in AI. Returns (fitness, pure scores of the AI games, steps, returns).
+    fitness = mean over games of (AI-game score + survival bonus + RETURN_GAMMA * returns)
+              - NODE_LAMBDA * hidden nodes.  Mirror-game scores are left out: against yourself
+              the score is zero-sum noise; rally length and returns are the signal (as in
+              the CMA-ES self-play of slimevolleygym's TRAINING.md).
+    Must depend ONLY on the job, so parallel == serial."""
+    genome, seeds, n_mirror = args
+    mirror = [k < n_mirror for k in range(len(seeds))]
+    results = play_batch(compile_genome(genome), _envs(len(seeds)), seeds, mirror)
+    fitness = np.mean([(0.0 if m else score) + survival + RETURN_GAMMA * returns
+                       for m, (score, _, returns, survival) in zip(mirror, results)])
     hidden = sum(n.type == NodeType.HIDDEN for n in genome.nodes.values())
-    return fitness / len(seeds) - NODE_LAMBDA * hidden, scores, steps, rets
+    ai = [r for m, r in zip(mirror, results) if not m]
+    return (float(fitness) - NODE_LAMBDA * hidden, [r[0] for r in ai],
+            [r[1] for r in results], [r[2] for r in results])
 
 
 # ---------------------------------------------------------------------------
@@ -143,11 +190,11 @@ def make_fitness_fn(pool: Pool | None, pop: Population, hof: HallOfFame):
     (here, while the scored genomes are still at hand)."""
     def fitness_fn(genomes: list[Genome]) -> np.ndarray:
         seeds = [int(s) for s in pop.rng.integers(0, 2**31 - 1, size=EPISODES)]
-        jobs = [(g, seeds) for g in genomes]
+        jobs = [(g, seeds, MIRROR_GAMES) for g in genomes]
         results = pool.map(evaluate_genome, jobs) if pool else list(map(evaluate_genome, jobs))
         fitnesses = np.array([r[0] for r in results])     # r = (fitness, scores, steps, returns)
         fitness_fn.mean_returns = float(np.mean([np.mean(r[3]) for r in results]))  # for the log
-        fitness_fn.mean_score = float(np.mean([np.mean(r[1]) for r in results]))
+        fitness_fn.mean_score = float(np.mean([np.mean(r[1]) for r in results]))   # AI games only
 
         if pop.generation % HOF_EVERY == 0:
             # g.fitness is NOT set yet (Population.run sets it after we return): rank by `fitnesses`
@@ -186,7 +233,7 @@ class HallOfFame:
                rng: np.random.Generator) -> None:
         """Re-evaluate candidates on fresh seeds; add each by its mean pure score."""
         seeds = [int(x) for x in rng.integers(0, 2**31 - 1, size=HOF_EPISODES)]
-        jobs = [(g, seeds) for g in candidates]
+        jobs = [(g, seeds, 0) for g in candidates]          # hall of fame: AI games only
         results = pool.map(evaluate_genome, jobs) if pool else list(map(evaluate_genome, jobs))
         for g, (_, scores, _, _) in zip(candidates, results):
             self.add(float(np.mean(scores)), g)
