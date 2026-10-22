@@ -126,3 +126,21 @@ Section numbers refer to the Unit 4 guide (`unit4_slimevolley.md`).
 **Watch item:** returns can add up to more than the score range (25 returns × 0.2 = 5). If agents learn long rallies without winning points, lower γ in a later run.
 
 **Early signal:** in a 10-generation smoke test, mean returns per game rose from 0.21 to 0.92 by generation 7. The old fitness had no measurable gradient.
+
+## Run `runs/slime3` (fitness v2): result and noise diagnosis
+
+**Result:** stopped at generation 256. Fitness v2 changed the behaviour once: agents went from fence-camping to moving across the whole half and jumping 87% of the time. After that the run plateaued. Averaged over 40-generation windows, returns per game stayed at 0.55–0.61 after generation 40, the population's mean pure score stayed at about −4.85, and the hall of fame stayed at −4.60 from generation 40 onward. Hidden nodes still grew, to 22.8 (λ = 0.002 was too weak to stop it).
+
+**Diagnosis:** the final population (generation 246, 150 genomes) was scored on two disjoint sets of 4 games, and on 16 games:
+
+| Check | Result |
+|---|---|
+| Rank agreement, games A vs games B (Spearman), fitness | +0.13 |
+| Same, pure score | −0.07 |
+| Same, returns | +0.26 |
+| Genomes in the top 15 of both A and B | 2 of 15 (random picking would give ≈ 1.5) |
+| 4-game fitness vs 16-game fitness (Spearman) | +0.42 |
+
+**Conclusion:** with 4 games per genome, seed luck dominates the ranking. Selection was close to random: each generation kept the genomes that happened to get easier games, and nothing real accumulated. That explains the plateau, the frozen hall of fame, and the unchecked bloat, since selection could not see whether structure was worth its cost. Even 16 games agree only partly with 4, so the real differences between genomes in this population are small as well.
+
+**Candidate next changes (not yet decided):** more games per genome (E = 4 → 16, which roughly halves the ranking noise, at about 4× the time per generation) and a stronger node penalty (λ = 0.002 → 0.01) to stop bloat and keep generations fast.

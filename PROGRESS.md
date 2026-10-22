@@ -3,7 +3,7 @@
 A record of what has been built so far, how it was checked, and what is left.
 Design decisions and their reasons are in [DECISIONS.md](DECISIONS.md).
 
-**Status (2026-10-21):** the NEAT core is complete, and XOR solves in 10 of 10 seeds. There are 48 passing tests. All Unit 2 modules exist, including the visualizer.
+**Status (2026-10-22):** the NEAT core is complete, and XOR solves in 10 of 10 seeds. There are 49 passing tests. Slime Volleyball has had three runs, none of which has learned to score yet; the latest diagnosis points to evaluation noise (see the Slime runs section and DECISIONS.md).
 
 ## Setup
 
@@ -48,7 +48,7 @@ Design decisions and their reasons are in [DECISIONS.md](DECISIONS.md).
 - **Speciation fix (found in the first Slime run):** the species count cycled 1 → 19 → 1. There were three causes: (1) dividing the distance by N = 36 made new structure nearly invisible; (2) the dynamic threshold had no cap (windup); (3) old species claimed their closest genome regardless of distance, so the threshold could never shrink the species count. The fixes are N = 1, `threshold_max`, and Stanley's "join the first compatible species, empty species die" rule. Afterwards the species count held at 10–12.
 - **Slime runner:** a vendored environment, parallel evaluation, a hall of fame (min-heap), atomic checkpoints and resume. Fixed the built-in AI's RNN memory leaking between games.
 
-## Test suite (48 tests)
+## Test suite (49 tests)
 
 | File | Covers |
 |---|---|
@@ -78,9 +78,18 @@ Design decisions and their reasons are in [DECISIONS.md](DECISIONS.md).
 - [ ] Write the reason for the distance coefficients in DECISIONS.md, decision 8.
 
 **Unit 4 (Slime Volleyball)**
-- [ ] Install in a separate environment. Check that a random policy scores about −5.
-- [ ] Measure observation ranges and choose a fixed input scaling.
-- [ ] Fitness: score plus a survival bonus (β < 1), shared seeds per generation, a hall of fame.
-- [ ] Parallel evaluation with `cpu_count() - 1` workers. Size the run so each generation takes 2 minutes or less.
-- [ ] Smoke test: 3 generations, kill, resume.
-- [ ] Launch the long run with nohup or tmux.
+- [x] Vendored environment (no gym). A random policy scores −4.8 (README: −4.87).
+- [x] Observation ranges measured. No extra scaling (the env already divides by 10).
+- [x] Fitness with shaping, shared seeds per generation, hall of fame (min-heap).
+- [x] Parallel evaluation. Checkpoints with atomic writes, and resume (tested identical to an uninterrupted run).
+- [x] `experiments/watch.py`: searches fresh seeds and saves a GIF of an agent's best game, plus button-usage statistics.
+- [ ] Decide on and launch the next run (evaluation noise fix).
+- [ ] Friday: final evaluation, GIFs, network diagrams, plots.
+
+## Slime runs
+
+| Run | Generations | Change | Outcome |
+|---|---|---|---|
+| `runs/slime1` | 0–170 | first version | Species count cycled 1 → 19 → 1. That led to the speciation fixes (Stanley's rule, N = 1, threshold cap). |
+| `runs/slime2` | 0–871 | speciation fixed | Species stable at 9–13, but the population converged on fence-camping. Fitness standard deviation was 0.086 (no signal), and there were 90 hidden nodes (bloat). Hall of fame −4.55. |
+| `runs/slime3` | 0–256 | fitness v2: per-rally survival bonus, returns over the net, node penalty | Agents became active (moving, jumping) and then plateaued: returns about 0.6 per game, hall of fame −4.60. Diagnosis: with 4 games per genome, rankings on two different 4-game sets barely agree (Spearman +0.13), so selection is close to random. |
