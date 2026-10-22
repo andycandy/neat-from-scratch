@@ -189,3 +189,11 @@ Best genome chosen by validation fitness, then scored once on the untouched test
 | **Mean** | | **circle 0.955, XOR 0.998, spiral 0.923** | | | |
 
 The networks are small: XOR needs 2–3 hidden nodes, the circle 3, and the spiral 5–6, with 5–18 connections in total. The spiral is the hardest, as expected. Times vary because two runs overlapped on the CPU for part of the grid. The spiral runs were accidentally executed twice (in the main grid and in a parallel process), and both executions gave identical results, which is further confirmation that a run is fully determined by its seed.
+
+## Run `runs/slime5`: self-play + lockstep batching
+
+**Why self-play:** `slime4` showed that against the built-in AI from the start, almost every game is lost 5–0, so there is very little signal to climb. In the slimevolleygym authors' own experiments (`TRAINING.md`), self-play from scratch reached −0.071 (CMA-ES, the agent vs a copy of itself, optimising rally length) and +0.353 (GA tournament) against the built-in AI, while our direct training plateaued at a hall of fame of −4.55.
+
+**Design:** each genome plays 16 games per generation: **12 vs a copy of itself (mirror)** and **4 vs the built-in AI**. The mix is fixed for the whole run, so the fitness definition never changes (no stagnation reset needed). Fitness = mean over games of (score of the AI games only + per-rally survival bonus + 0.2 × returns) − 0.01 × hidden nodes. Mirror-game scores are left out: against yourself the score is zero-sum noise, and rally length and returns are the signal (the CMA-ES approach). Winning points against the AI is therefore the only way to gain score at all. The **hall of fame is scored against the built-in AI only** (pure score), so it reports the real objective directly. The game hands both players a view mirrored to the right-hand side and interprets "forward" relative to each player, so the same network plays either side unchanged.
+
+**Lockstep batching (speed-up):** a genome's 16 games step together, with **one network call per step** for every player we control (up to 28 rows: 12 mirror games × 2 sides + 4 AI games). Measured on 16 AI games (10,340 steps): one game at a time 0.89 s, lockstep 0.22 s, so **4.0× faster with identical results** (tested). Generations take about 6 s early in `slime5`, versus 20–60 s for `slime4`.
