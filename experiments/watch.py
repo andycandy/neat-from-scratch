@@ -1,6 +1,8 @@
 """Watch an evolved agent play: saves a GIF and prints how it uses its buttons.
 
-uv run python experiments/watch.py --run runs/slime2 --rank 0 --seed 123
+uv run python experiments/watch.py --run runs/slime3                 # best game of 20
+uv run python experiments/watch.py --run runs/slime3 --best-of 50    # search more seeds
+uv run python experiments/watch.py --run runs/slime3 --seed 123      # one specific game
   --rank 0 = best hall-of-fame agent (1 = second best, ...)
 """
 import argparse
@@ -22,7 +24,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from neat.network import compile_genome, run  # noqa: E402
 import __main__  # noqa: E402
 import run_slime  # noqa: E402
-from run_slime import INPUT_SCALE, load_latest_checkpoint  # noqa: E402
+from run_slime import INPUT_SCALE, load_latest_checkpoint, play  # noqa: E402
 
 # checkpoints were written by run_slime.py running AS __main__, so pickle recorded
 # the class as __main__.HallOfFame; point that name at the real class before loading
@@ -83,11 +85,24 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--run", default="runs/slime2")
     ap.add_argument("--rank", type=int, default=0)
-    ap.add_argument("--seed", type=int, default=123)
+    ap.add_argument("--seed", type=int, default=None, help="play this seed (skips the search)")
+    ap.add_argument("--best-of", type=int, default=20, help="search this many fresh seeds")
     args = ap.parse_args()
 
-    _, hof = load_latest_checkpoint(Path(args.run))
+    pop, hof = load_latest_checkpoint(Path(args.run))
     score_hof, genome = hof.ranked()[args.rank]
+
+    if args.seed is None:                       # find this agent's best game
+        net = compile_genome(genome)
+        env = SlimeVolleyEnv()
+        seeds = range(10_000, 10_000 + args.best_of)   # never used in training
+        games = [(play(net, env, s), s) for s in seeds]
+        scores = [g[0][0] for g in games]
+        print(f"searched {args.best_of} games (gen {pop.generation}): mean score {np.mean(scores):+.2f}, "
+              f"best {max(scores):+.0f}, returns/game {np.mean([g[0][2] for g in games]):.1f}")
+        (score, _, returns, _), args.seed = max(games, key=lambda g: (g[0][0], g[0][2]))
+        print(f"best game: seed {args.seed}, score {score:+.0f}, {returns} returns")
+
     frames, actions, total = record_game(genome, args.seed)
 
     names = ["forward", "backward", "jump"]
@@ -100,9 +115,9 @@ def main() -> None:
     top = sorted(zip(counts.tolist(), [tuple(int(v) for v in c) for c in combos]), reverse=True)[:3]
     print("most common [fwd, back, jump]: " + ", ".join(f"{c} {n / len(actions):.0%}" for n, c in top))
     x_moved = frames[:, 0].max() - frames[:, 0].min()
-    print(f"agent x range over the game: {x_moved:.1f} (court half is ~11 wide)")
+    print(f"agent x range over the game: {x_moved:.1f} (its whole half spans 2.0 to 22.5, i.e. 20.5)")
 
-    out = Path(args.run) / f"watch_rank{args.rank}_seed{args.seed}.gif"
+    out = Path(args.run) / f"gen{pop.generation:05d}_rank{args.rank}_seed{args.seed}.gif"
     save_gif(frames, out)
     print(f"saved {out}")
 
