@@ -19,7 +19,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from neat.config import NeatConfig  # noqa: E402
-from neat.genes import Genome  # noqa: E402
+from neat.genes import Genome, NodeType  # noqa: E402
 from neat.network import compile_genome, run  # noqa: E402
 from neat.population import Population  # noqa: E402
 from slime.slimevolley import SlimeVolleyEnv  # noqa: E402
@@ -27,7 +27,12 @@ from slime.slimevolley import SlimeVolleyEnv  # noqa: E402
 # ---------------------------------------------------------------------------
 # Settings (every value here goes into DECISIONS.md, Unit 4 §18)
 # ---------------------------------------------------------------------------
-BETA = 0.5                 # survival bonus weight, must be < 1 (Unit 4 §5)
+# Fitness shaping (fixed for the whole run; reasons in DECISIONS.md, "Slime fitness v2")
+SURVIVAL_A = 0.75          # max survival bonus per rally; < 1 so a point always beats a rally
+SURVIVAL_TAU = 300         # steps (10 s at 30 fps); bonus = A * (1 - exp(-rally_steps / TAU))
+RETURN_GAMMA = 0.2         # per return (we touched the ball, then it crossed to the AI's side)
+NODE_LAMBDA = 0.002        # per hidden node: structure must pay for itself
+TOUCH_MARGIN = 0.3         # the game pushes the ball just outside the agent after a bounce
 EPISODES = 4               # E: episodes per genome per generation
 INPUT_SCALE = 1.0          # TODO step 2: fixed divisor(s) after measuring obs ranges
                            #   (the env ALREADY divides raw values by 10 internally)
@@ -70,39 +75,63 @@ def _init_worker() -> None:
     _ENV = SlimeVolleyEnv()
 
 
-def play(net, env: SlimeVolleyEnv, seed: int) -> tuple[float, int]:
-    """One full game against the built-in AI. Returns (pure score, number of steps).
+def play(net, env: SlimeVolleyEnv, seed: int) -> tuple[float, int, int, float]:
+    """One full game against the built-in AI.
+    Returns (pure score, steps, returns over the net, survival bonus summed over rallies).
     `net` is the result of compile_genome(genome)."""
-    env.seed(seed) # BEFORE env.reset() (unseeded env uses global np.random -> not
+    env.seed(seed)       # BEFORE env.reset(): an unseeded env uses global np.random
     obs = env.reset()
     env.policy.reset()   # built-in AI is an RNN: env.reset() does NOT clear its memory,
                          # so without this a game depends on the worker's previous game
+    me = env.game.agent_right                     # our agent (same object all game)
+    touch_dist2 = (me.r + 0.5 + TOUCH_MARGIN) ** 2  # ball radius 0.5
     done = False
     total, step = 0.0, 0
+    returns, rally, survival, touched = 0, 0, 0.0, False
+    prev_bx = env.game.ball.x
     while not done:
         out = run(net, obs[None, :] / INPUT_SCALE)[0]
         action = (out > 0).astype(int)
         obs, reward, done, info = env.step(action)
         total += reward
         step += 1
-    return total, step
+        rally += 1
+        ball = env.game.ball
+        if (ball.x - me.x) ** 2 + (ball.y - me.y) ** 2 < touch_dist2:
+            touched = True
+        if touched and prev_bx > 0 > ball.x:      # crossed from our side to the AI's side
+            returns += 1
+            touched = False
+        prev_bx = ball.x
+        if reward != 0:                           # a point ended this rally
+            survival += SURVIVAL_A * (1 - np.exp(-rally / SURVIVAL_TAU))
+            rally, touched = 0, False
+            prev_bx = env.game.ball.x              # ball was re-served at the net
+    if rally > 0:                                 # unfinished last rally (3000-step limit)
+        survival += SURVIVAL_A * (1 - np.exp(-rally / SURVIVAL_TAU))
+    return total, step, returns, survival
 
 
-def evaluate_genome(args: tuple[Genome, list[int]]) -> tuple[float, list[float], list[int]]:
-    """Worker job: (genome, seeds) -> (fitness, per-episode scores, per-episode lengths).
+def evaluate_genome(args: tuple[Genome, list[int]]) -> tuple[float, list[float], list[int], list[int]]:
+    """Worker job: (genome, seeds) -> (fitness, per-episode pure scores, lengths, returns).
+    fitness = mean over games of (score + survival bonus + RETURN_GAMMA * returns)
+              - NODE_LAMBDA * hidden nodes.
     Must depend ONLY on (genome, seeds), so parallel == serial."""
     genome, seeds = args
     net = compile_genome(genome=genome)
     scores = []
     steps = []
+    rets = []
     fitness = 0.0
     if _ENV is None: _init_worker()
     for s in seeds:
-        score, step = play(net=net, env=_ENV, seed=s)
+        score, step, returns, survival = play(net=net, env=_ENV, seed=s)
         scores.append(score)
         steps.append(step)
-        fitness += score + BETA * step / 3000
-    return fitness / len(seeds), scores, steps
+        rets.append(returns)
+        fitness += score + survival + RETURN_GAMMA * returns
+    hidden = sum(n.type == NodeType.HIDDEN for n in genome.nodes.values())
+    return fitness / len(seeds) - NODE_LAMBDA * hidden, scores, steps, rets
 
 
 # ---------------------------------------------------------------------------
@@ -116,7 +145,9 @@ def make_fitness_fn(pool: Pool | None, pop: Population, hof: HallOfFame):
         seeds = [int(s) for s in pop.rng.integers(0, 2**31 - 1, size=EPISODES)]
         jobs = [(g, seeds) for g in genomes]
         results = pool.map(evaluate_genome, jobs) if pool else list(map(evaluate_genome, jobs))
-        fitnesses = np.array([r[0] for r in results])     # r = (fitness, scores, steps)
+        fitnesses = np.array([r[0] for r in results])     # r = (fitness, scores, steps, returns)
+        fitness_fn.mean_returns = float(np.mean([np.mean(r[3]) for r in results]))  # for the log
+        fitness_fn.mean_score = float(np.mean([np.mean(r[1]) for r in results]))
 
         if pop.generation % HOF_EVERY == 0:
             # g.fitness is NOT set yet (Population.run sets it after we return): rank by `fitnesses`
@@ -157,7 +188,7 @@ class HallOfFame:
         seeds = [int(x) for x in rng.integers(0, 2**31 - 1, size=HOF_EPISODES)]
         jobs = [(g, seeds) for g in candidates]
         results = pool.map(evaluate_genome, jobs) if pool else list(map(evaluate_genome, jobs))
-        for g, (_, scores, _) in zip(candidates, results):
+        for g, (_, scores, _, _) in zip(candidates, results):
             self.add(float(np.mean(scores)), g)
 
     def ranked(self) -> list[tuple[float, Genome]]:
@@ -217,6 +248,7 @@ def main() -> None:
             row = pop.stats[-1]
             hof_best = hof.ranked()[0][0] if hof.heap else float("nan")
             print(f"gen {row['gen']:5d}  best {row['best']:6.3f}  mean {row['mean']:6.3f}  "
+                  f"score {fitness_fn.mean_score:6.3f}  returns {fitness_fn.mean_returns:5.2f}  "
                   f"species {row['n_species']:3d}  hidden {row['mean_hidden']:5.2f}  "
                   f"hof {hof_best:6.3f}  {time.time() - t0:5.1f}s", flush=True)
 

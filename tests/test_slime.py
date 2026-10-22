@@ -49,11 +49,32 @@ def test_parallel_equals_serial():
 
 
 def test_survival_bonus_never_beats_a_point():
-    from run_slime import BETA
-    assert BETA < 1
-    worst_with_point = (0 + 1) + BETA * 0 / 3000       # one more point, survived 0 steps
-    best_without = 0 + BETA * 3000 / 3000               # same score, survived the full game
-    assert worst_with_point > best_without
+    from run_slime import SURVIVAL_A
+    assert SURVIVAL_A < 1                     # a full-length rally is worth less than one point
+
+
+def test_returns_counted_for_a_real_player():
+    """Drive OUR side with the built-in AI's own policy: it rallies, so returns must be > 0;
+    a frozen agent (no buttons) never touches the ball, so returns must be 0."""
+    from slime.slimevolley import BaselinePolicy
+    import run_slime
+
+    class PolicyNet:            # stand-in for a compiled network
+        def __init__(self, policy): self.policy = policy
+
+    def play_with(policy_fn, seed):
+        env = SlimeVolleyEnv()
+        orig_run = run_slime.run
+        run_slime.run = lambda net, x: np.array([policy_fn(x[0])], dtype=float) * 2 - 1
+        try:
+            return run_slime.play(None, env, seed)
+        finally:
+            run_slime.run = orig_run
+
+    bp = BaselinePolicy()
+    good = sum(play_with(lambda o: bp.predict(o), s)[2] for s in range(3))
+    frozen = sum(play_with(lambda o: [0, 0, 0], s)[2] for s in range(3))
+    assert good > 3 and frozen == 0
 
 
 def test_resume_matches_uninterrupted(tmp_path, monkeypatch):

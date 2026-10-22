@@ -100,3 +100,29 @@ Section numbers refer to the Unit 4 guide (`unit4_slimevolley.md`).
 **First overnight run (`runs/slime1`, kept as the "before" run):** generations 0–170 with the old speciation (neat-python rule, N = 36, no threshold cap). The species count cycled 1 → 17 → 1 → 19 → 1 instead of settling. That led to the speciation fixes above. The best score reached −3.37, and the hall of fame was at −4.50.
 
 **Checkpoints:** one per generation, written to a temporary file and then renamed (so a crash cannot leave a half-written file). The last 3 are kept. Each holds the population (rng, tracker, species, stats) and the hall of fame. Each generation's champion is also pickled to `best/gen_XXXX.pkl` for the complexification figures.
+
+## Slime fitness v2 (after the failed `runs/slime2`)
+
+**What failed:** `runs/slime2` ran 871 generations with fitness = score + 0.5·T/3000. The hall of fame stayed at −4.55, about the same as random play (−4.87). A diagnosis of the final population (`experiments/watch.py` plus a population scan) found:
+- **Every genome had converged on one strategy:** camp against the fence, press "forward" 90% of the time, and ignore the ball. 135 of 150 genomes scored exactly −4.75 on the same 4 games.
+- **Fitness could not rank genomes:** the standard deviation was 0.086. Episode lengths were 540–758 steps, so the survival bonus differed by only about ±0.02. One lucky point (0.25 of a 4-game mean) outweighed it by more than 10×, so selection was picking seed luck.
+- **Bloat:** 90 hidden nodes, all of them wired to the outputs. Nothing selected against structure.
+
+**New fitness** (fixed for the whole run):
+
+`fitness = mean over games [ score + Σ_rallies A·(1 − e^(−t/τ)) + γ·returns ] − λ·hidden_nodes`
+
+| Term | Value | Reason |
+|---|---|---|
+| Survival per rally, `A·(1 − e^(−t/τ))` | A = 0.75, τ = 300 steps (10 s) | Rewards keeping each rally alive, with diminishing returns, so stalling can't farm unlimited reward. The clock resets at every point. **A < 1, so a whole rally's bonus is always worth less than one point.** τ = 10 s puts the steep part of the curve where improvement happens: campers lose a point every ~4.3 s (bonus 0.26), and a 30 s rally earns 0.71. A curve that saturates in ~4 s would give campers nearly the full bonus and no gradient. |
+| Returns, `γ·returns` | γ = 0.2 | A return is counted when our agent touches the ball and the ball then crosses to the AI's side. This rewards the outcome ("the shot cleared the net") instead of a hand-coded angle, which would need a physics model. Requiring a touch first excludes serves that drift over on their own. Juggling on our own side earns nothing. A return (0.2) is worth less than a point (1.0). For scale: the built-in AI, driving our side, makes 22–27 returns per game. |
+| Bloat penalty, `λ·hidden_nodes` | λ = 0.002 | Every hidden node must pay for itself. 50 nodes cost 0.1, less than one return, so useful structure can still grow. |
+| Score | weight 1 | Still the primary objective. **All reporting and the hall of fame use the pure score.** |
+
+**Why the fitness doesn't change across generations:** annealed shaping is a real technique (curriculum learning, OpenAI Five's "team spirit" weight annealed from 0 to 1). But NEAT's stagnation check compares each species' all-time best fitness with its current fitness, and "best ever" tracking does the same. A fitness whose scale changes every generation would make those comparisons meaningless, and species could be culled just because the reward shrank. The saturating per-rally bonus already caps stalling, which was the main reason to anneal.
+
+**Touch detection** reads the game state without changing physics: after a bounce, the game pushes the ball just outside the agent, so a touch is the ball being within the agent radius + ball radius + 0.3.
+
+**Watch item:** returns can add up to more than the score range (25 returns × 0.2 = 5). If agents learn long rallies without winning points, lower γ in a later run.
+
+**Early signal:** in a 10-generation smoke test, mean returns per game rose from 0.21 to 0.92 by generation 7. The old fitness had no measurable gradient.
