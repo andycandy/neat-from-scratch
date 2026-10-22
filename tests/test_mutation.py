@@ -116,3 +116,15 @@ def test_mutate_leaves_parent_alone():
     before = (dict(g.nodes), dict(g.conns), dict(g.conns_broken))
     mutate(g, cfg, InnovationTracker(3), np.random.default_rng(0))
     assert (g.nodes, g.conns, g.conns_broken) == before
+
+
+def test_add_node_respects_max_nodes():
+    from neat.innovation import InnovationTracker
+    from neat.mutation import mutate
+    from neat.population import make_initial_population
+    cfg = NeatConfig(num_inputs=2, num_outputs=1, pop_size=1, p_add_node=1.0, max_nodes=8)
+    tracker, rng = InnovationTracker(3), np.random.default_rng(0)
+    g = make_initial_population(cfg, tracker, rng)[0]
+    for _ in range(200):
+        g = mutate(g, cfg, tracker, rng)
+    assert len(g.nodes) == 8

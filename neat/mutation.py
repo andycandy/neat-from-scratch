@@ -61,6 +61,8 @@ def mutate_add_connection(genome: Genome, cfg: NeatConfig,
 def add_node(genome: Genome, cfg: NeatConfig,
             tracker: InnovationTracker, rng: np.random.Generator) -> Genome :
     """Add a node between existing connection"""
+    if cfg.max_nodes is not None and len(genome.nodes) >= cfg.max_nodes:
+        return genome                     # at the cap: skip (padded JAX arrays have a fixed size)
     existing : list[ConnGene] = [c for c in genome.conns.values() if c.enabled]
     if len(existing) == 0: return genome
     chosen : ConnGene = existing[int(rng.integers(len(existing)))]
