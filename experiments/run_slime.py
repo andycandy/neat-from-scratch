@@ -238,11 +238,14 @@ def main() -> None:
     else:
         pop, hof = Population(make_config(), args.seed), HallOfFame()
 
+    (out / "best").mkdir(exist_ok=True)
     with Pool(args.workers, initializer=_init_worker) as pool:
         fitness_fn = make_fitness_fn(pool, pop, hof)      # hof is updated inside it
         while pop.generation < args.generations:
             t0 = time.time()
-            pop.run(fitness_fn, 1, snapshot_dir=str(out / "best"))   # exactly one generation
+            pop.run(fitness_fn, 1)                        # exactly one generation
+            with open(out / "best" / f"gen_{pop.generation - 1:04d}.pkl", "wb") as f:
+                pickle.dump(pop.champ, f)                 # that generation's best, for figures
             pop.save_stats(str(out / "stats.csv"))
             save_checkpoint(out, pop, hof)
             row = pop.stats[-1]

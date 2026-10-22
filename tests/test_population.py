@@ -26,17 +26,17 @@ def test_same_seed_same_run():
     assert a.stats == b.stats
 
 
-def test_save_load_roundtrip(tmp_path):
+def test_pickle_roundtrip_keeps_run_state():
+    import pickle
     from neat.population import Population
     cfg = NeatConfig(num_inputs=2, num_outputs=1, pop_size=20)
     p = Population(cfg, 1)
-    p.save(str(tmp_path / "ck.pkl"))
-    q = Population.load(str(tmp_path / "ck.pkl"))
+    q = pickle.loads(pickle.dumps(p))                      # what checkpoints rely on
     assert q.rng.random() == p.rng.random() and q.tracker.conn_registry == p.tracker.conn_registry
 
 
 def test_adjust_threshold():
-    from neat.population import adjust_threshold
+    from neat.species import adjust_threshold
     cfg = NeatConfig(num_inputs=2, num_outputs=1, compat_threshold=1.0)
     assert adjust_threshold(cfg, 20).compat_threshold > 1.0       # too many -> raise
     assert adjust_threshold(cfg, 3).compat_threshold < 1.0        # too few -> lower
@@ -59,12 +59,12 @@ def test_threshold_pulls_species_into_range():
     assert p.stats[-1]["threshold"] > 0.3
 
 
-def test_snapshots_and_stats_columns(tmp_path):
+def test_champ_and_stats_columns(tmp_path):
     from neat.population import Population
     cfg = NeatConfig(num_inputs=2, num_outputs=1, pop_size=30)
     p = Population(cfg, 0)
-    p.run(lambda gs: np.zeros(len(gs)), 3, snapshot_dir=str(tmp_path / "best"))
-    assert sorted(f.name for f in (tmp_path / "best").iterdir()) ==         ["gen_0000.pkl", "gen_0001.pkl", "gen_0002.pkl"]
+    p.run(lambda gs: np.arange(len(gs), dtype=float), 3)
+    assert p.champ.fitness == 29.0 and len(p.stats) == 3   # champ = last generation's best
     p.save_stats(str(tmp_path / "s.csv"))
     header = (tmp_path / "s.csv").read_text().splitlines()[0]
     assert "act_tanh" in header and "champ_hidden" in header and "threshold" in header

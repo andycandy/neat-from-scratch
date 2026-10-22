@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+import dataclasses
 from dataclasses import dataclass
 
 from neat.config import NeatConfig
@@ -70,3 +70,15 @@ def speciate(genomes: list[Genome], species_list: list[Species], cfg: NeatConfig
     for s in species_list:   # next generation compares against the member closest to the old rep
         s.representative = min(s.members, key=lambda g: compatibility_distance(g, s.representative, cfg))
     return species_list, next_key
+
+
+def adjust_threshold(cfg: NeatConfig, n_species: int) -> NeatConfig:
+    """Dynamic threshold: raise it if there are too many species, lower it if too few,
+    clamped to [threshold_min, threshold_max]. cfg is frozen, so return a new one."""
+    lo, hi = cfg.target_species
+    t = cfg.compat_threshold
+    if n_species > hi:
+        t = min(cfg.threshold_max, t + cfg.threshold_step)
+    elif n_species < lo:
+        t = max(cfg.threshold_min, t - cfg.threshold_step)
+    return dataclasses.replace(cfg, compat_threshold=t)
