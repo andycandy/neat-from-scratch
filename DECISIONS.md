@@ -173,3 +173,19 @@ Section numbers refer to the Unit 4 guide (`unit4_slimevolley.md`).
 **Implementation note:** the activation inputs are not clipped. An early version clipped every activation input to ±30, which changed identity, relu, abs and sin for large sums; the NumPy-equivalence test caught it (4 of 100 random genomes disagreed). Only the sigmoid can overflow, and `jax.nn.sigmoid` is overflow-safe.
 
 **GPU:** native Windows JAX is CPU-only. A CUDA JAX install in WSL2 failed on an invalid `jax_cuda12_pjrt` wheel and was abandoned, so all Unit 3 results are on the CPU (16 threads). The networks are small enough that this is adequate.
+
+## Unit 3 results (`runs/backprop/`, 40 generations, population 150)
+
+Best genome chosen by validation fitness, then scored once on the untouched test split.
+
+| Dataset | Seed | Test accuracy | Hidden nodes | Connections | Time |
+|---|---|---|---|---|---|
+| Circle | 0 | 0.980 | 3 | 8 | 532 s |
+| Circle | 1 | 0.930 | 3 | 7 | 532 s |
+| XOR | 0 | 1.000 | 2 | 5 | 591 s |
+| XOR | 1 | 0.995 | 3 | 7 | 1014 s |
+| Spiral | 0 | 0.950 | 6 | 18 | 866 s |
+| Spiral | 1 | 0.895 | 5 | 16 | 532 s |
+| **Mean** | | **circle 0.955, XOR 0.998, spiral 0.923** | | | |
+
+The networks are small: XOR needs 2–3 hidden nodes, the circle 3, and the spiral 5–6, with 5–18 connections in total. The spiral is the hardest, as expected. Times vary because two runs overlapped on the CPU for part of the grid. The spiral runs were accidentally executed twice (in the main grid and in a parallel process), and both executions gave identical results, which is further confirmation that a run is fully determined by its seed.

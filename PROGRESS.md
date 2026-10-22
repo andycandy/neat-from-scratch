@@ -3,7 +3,7 @@
 A record of what has been built so far, how it was checked, and what is left.
 Design decisions and their reasons are in [DECISIONS.md](DECISIONS.md).
 
-**Status (2026-10-22):** the NEAT core is complete, and XOR solves in 10 of 10 seeds. There are 49 passing tests. Slime Volleyball has had three runs, none of which has learned to score yet; the latest diagnosis points to evaluation noise (see the Slime runs section and DECISIONS.md).
+**Status (2026-10-22):** the NEAT core is complete, and XOR solves in 10 of 10 seeds. Backprop-NEAT (Unit 3) is complete apart from figures and the write-up: test accuracy averages circle 0.955, XOR 0.998, spiral 0.923, with 5–18 connections, and padded + vmap training is 5.9×–7.8× faster than per-genome compilation at identical accuracy. Slime Volleyball has had three runs, none of which has learned to score yet; the latest diagnosis points to evaluation noise (see the Slime runs section and DECISIONS.md).
 
 ## Setup
 
