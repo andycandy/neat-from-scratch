@@ -44,13 +44,13 @@ def random_genomes(n=100):
 
 def test_unit1_example_0731():
     out = _fwd(unit1_genome(), np.array([[1.0, 0.5]], dtype=np.float32), n_max=5)
-    assert abs(out[0] - 0.731) < 1e-3
+    assert out.shape == (1, 1) and abs(out[0, 0] - 0.731) < 1e-3
 
 
 def test_matches_numpy_on_100_random_genomes():
     x = np.random.default_rng(1).uniform(-5, 5, (50, 2)).astype(np.float32)
     for g in random_genomes():
-        want = run(compile_genome(g), x)[:, 0]
+        want = run(compile_genome(g), x)
         assert np.allclose(_fwd(g, x), want, atol=1e-4), "padded != numpy (transposed W? wrong order?)"
 
 
@@ -65,8 +65,10 @@ def test_pack_unpack_roundtrip():
     for g in random_genomes(20):
         p = padded.pack(g, 32)
         back = padded.unpack(g, p, p.W, p.b)
-        assert {k: c.weight for k, c in back.conns.items()} == {k: c.weight for k, c in g.conns.items()}
-        assert {k: n.bias for k, n in back.nodes.items()} == {k: n.bias for k, n in g.nodes.items()}
+        for k in g.conns:                                    # float32 arrays: equal to ~7 digits
+            assert np.isclose(back.conns[k].weight, g.conns[k].weight, rtol=1e-6, atol=1e-7)
+        for k in g.nodes:
+            assert np.isclose(back.nodes[k].bias, g.nodes[k].bias, rtol=1e-6, atol=1e-7)
 
 
 def test_masked_entries_get_zero_gradient():
