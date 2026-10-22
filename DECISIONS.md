@@ -152,3 +152,24 @@ Section numbers refer to the Unit 4 guide (`unit4_slimevolley.md`).
 **Prediction if the diagnosis is right:** rankings become meaningful, so the hall of fame moves off −4.60 and returns per game keep rising past about 0.6 instead of plateauing. If it stays flat even with 16 games, the remaining explanation is that the built-in AI is too strong for a from-scratch population to get any signal. In that case self-play is the next fix (on the README leaderboard, a GA trained by self-play reached a positive score against the built-in AI).
 
 **`slime4` result (stopped at generation 243):** the noise fix helped at first. The hall of fame moved from −4.95 to −4.55 by generation 68, returns rose above `slime3`'s plateau (about 0.70 vs 0.58 per game), and bloat stayed low (3–5 hidden nodes) for about 100 generations. After that it plateaued as well: the hall of fame stayed at −4.55 from generation 68 to 243, returns hovered at 0.5–0.8, the population's pure score stayed at −4.8 to −4.9, and hidden nodes crept up to 16. **Conclusion:** noise was part of the problem but not all of it. The remaining explanation is that the built-in AI is far stronger than a from-scratch population: almost every game is lost 5–0, so there is very little signal to climb. The planned next step is self-play (opponents of similar strength), time permitting.
+
+---
+
+# Unit 3 — Backprop-NEAT decisions
+
+1. **Datasets:** an exact port of `dataset.js` from hardmaru/backprop-neat-js (itself from TensorFlow Playground): 200 points per split, noise 0.5, and the same formulas for circle, XOR and spiral. One deviation: the JS makes train and test only, so a 200-point validation split is generated with the same generator, because fitness must not use train or test data. Randomness comes from a seeded numpy Generator, so the splits are fixed per seed.
+2. **Inputs:** x and y only, with no hand-made features. Hidden nodes and activations have to discover them.
+3. **Output:** `identity` (a logit), with the loss computed on logits (`optax.sigmoid_binary_cross_entropy`), which is numerically stable.
+4. **Fitness quality term:** validation accuracy. It is easy to explain and is what the report states.
+5. **Complexity penalty:** fitness = validation accuracy − 0.002 × enabled connections, so 10 extra connections must buy more than 2 percentage points of accuracy.
+6. **Lamarckian inheritance:** trained weights are written back into the genome, so children start from trained weights.
+7. **Weight mutation:** rate 0.8 → 0.2 and σ 0.5 → 0.1, because gradients now tune the weights and only a little exploration is kept. **c3** 0.3 → 0.1, so that trained weights do not split species which share a structure.
+8. **Activations:** identity, sigmoid, tanh, relu, sin, gauss and abs. No `step`, because its gradient is 0 everywhere.
+9. **N_max = 32** (`max_nodes = 32`; add-node is skipped at the cap). No size buckets.
+10. **Optimizer:** Adam, learning rate 0.02, 200 full-batch steps in `lax.scan`, global-norm gradient clipping at 1.0.
+11. **Runs:** population 150, 40 generations, seeds 0 and 1, for each of circle, XOR and spiral.
+12. **Engineering improvement: padded + vmapped training vs per-genome compilation** (`experiments/bench_backprop.py`, result in `runs/backprop_bench.json`). The same 20 genomes (3–15 nodes) were trained from the same starting weights on the same data with the same optimizer: the naive version took 13.27 s with 20 compiles (1.5 genomes/s); the padded + vmap version took 2.24 s with 1 compile (8.9 genomes/s), and 1.71 s once compiled (11.7 genomes/s). That is a **5.9× speed-up including the compile and 7.8× once compiled**, with **identical validation accuracy for every genome** (maximum difference 0.0). The naive cost grows by one compile per genome (150 per generation at full population), while the padded version compiles once per run. Measured while the experiment grid was running, so both timings carry the same CPU contention.
+
+**Implementation note:** the activation inputs are not clipped. An early version clipped every activation input to ±30, which changed identity, relu, abs and sin for large sums; the NumPy-equivalence test caught it (4 of 100 random genomes disagreed). Only the sigmoid can overflow, and `jax.nn.sigmoid` is overflow-safe.
+
+**GPU:** native Windows JAX is CPU-only. A CUDA JAX install in WSL2 failed on an invalid `jax_cuda12_pjrt` wheel and was abandoned, so all Unit 3 results are on the CPU (16 threads). The networks are small enough that this is adequate.
