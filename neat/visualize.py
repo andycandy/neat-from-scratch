@@ -48,12 +48,13 @@ def draw_genome(genome: Genome, path: str, input_names: list[str] | None = None,
     pos = node_positions(genome)
     fig, ax = plt.subplots(figsize=(7, 4.5))
 
-    # edges first (zorder 1) so nodes sit on top
+    # edges first (zorder 1) so nodes sit on top; width relative to this network's largest weight
+    w_max = max([abs(c.weight) for c in genome.conns.values() if c.enabled], default=1.0) or 1.0
     for c in genome.conns.values():
         (x1, y1), (x2, y2) = pos[c.src], pos[c.dest]
         if c.enabled:
             ax.plot([x1, x2], [y1, y2], color="tab:blue" if c.weight > 0 else "tab:red",
-                    linewidth=0.5 + 1.5 * abs(c.weight), alpha=0.8, zorder=1)
+                    linewidth=0.5 + 4.0 * abs(c.weight) / w_max, alpha=0.8, zorder=1)
         else:
             ax.plot([x1, x2], [y1, y2], color="gray", linewidth=0.8, linestyle="--",
                     alpha=0.3, zorder=1)
