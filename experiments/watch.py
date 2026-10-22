@@ -24,7 +24,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from neat.network import compile_genome, run  # noqa: E402
 import __main__  # noqa: E402
 import run_slime  # noqa: E402
-from run_slime import INPUT_SCALE, load_latest_checkpoint, play  # noqa: E402
+from run_slime import load_latest_checkpoint, play  # noqa: E402
 
 # checkpoints were written by run_slime.py running AS __main__, so pickle recorded
 # the class as __main__.HallOfFame; point that name at the real class before loading
@@ -41,7 +41,7 @@ def record_game(genome, seed: int):
     net = compile_genome(genome)
     frames, actions, total, done = [], [], 0.0, False
     while not done:
-        out = run(net, obs[None, :] / INPUT_SCALE)[0]
+        out = run(net, obs[None, :])[0]
         action = (out > 0).astype(int)
         g = env.game
         frames.append((g.agent_right.x, g.agent_right.y, g.agent_left.x, g.agent_left.y,

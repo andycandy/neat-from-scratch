@@ -40,10 +40,10 @@ def test_same_genome_same_seeds_same_fitness():
 
 def test_parallel_equals_serial():
     from multiprocessing import Pool
-    from run_slime import _init_worker, evaluate_genome
+    from run_slime import evaluate_genome
     jobs = [(g, [3, 4, 5], 2) for g in _genomes()]
     serial = list(map(evaluate_genome, jobs))
-    with Pool(2, initializer=_init_worker) as pool:
+    with Pool(2) as pool:
         parallel = pool.map(evaluate_genome, jobs)
     assert parallel == serial
 
@@ -83,7 +83,8 @@ def test_resume_matches_uninterrupted(tmp_path, monkeypatch):
     from neat.population import Population
     import dataclasses
     import run_slime
-    monkeypatch.setattr(run_slime, "EPISODES", 1)       # small and fast; restored after
+    monkeypatch.setattr(run_slime, "EPISODES", 2)       # small and fast; restored after
+    monkeypatch.setattr(run_slime, "MIRROR_GAMES", 1)   # 1 mirror + 1 AI game
     cfg = dataclasses.replace(run_slime.make_config(), pop_size=12)
     a, ha = Population(cfg, 0), HallOfFame()
     a.run(make_fitness_fn(None, a, ha), 3)
@@ -119,13 +120,13 @@ def test_play_batch_matches_play_on_ai_games():
         net = compile_genome(g)
         seeds = [11, 12, 13, 14]
         one_by_one = [play(net, SlimeVolleyEnv(), s) for s in seeds]
-        assert play_batch(net, _envs(4), seeds, [False] * 4) == one_by_one
+        assert play_batch(net, _envs(4), seeds, 0) == one_by_one
 
 
 def test_mirror_games_run_and_are_deterministic():
     from neat.network import compile_genome
     from run_slime import _envs, play_batch
     net = compile_genome(_genomes(1)[0])
-    res = play_batch(net, _envs(6), list(range(6)), [True] * 6)
+    res = play_batch(net, _envs(6), list(range(6)), 6)
     assert all(-5 <= r[0] <= 5 and r[1] > 0 for r in res)       # real games were played
-    assert res == play_batch(net, _envs(6), list(range(6)), [True] * 6)
+    assert res == play_batch(net, _envs(6), list(range(6)), 6)
