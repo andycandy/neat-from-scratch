@@ -31,9 +31,9 @@ from slime.slimevolley import SlimeVolleyEnv  # noqa: E402
 SURVIVAL_A = 0.75          # max survival bonus per rally; < 1 so a point always beats a rally
 SURVIVAL_TAU = 300         # steps (10 s at 30 fps); bonus = A * (1 - exp(-rally_steps / TAU))
 RETURN_GAMMA = 0.2         # per return (we touched the ball, then it crossed to the AI's side)
-NODE_LAMBDA = 0.002        # per hidden node: structure must pay for itself
+NODE_LAMBDA = 0.01         # per hidden node (0.002 -> 0.01): 50 nodes cost 0.5, structure must pay
 TOUCH_MARGIN = 0.3         # the game pushes the ball just outside the agent after a bounce
-EPISODES = 4               # E: episodes per genome per generation
+EPISODES = 16              # E: games per genome per generation (4 -> 16: see DECISIONS, slime4)
 INPUT_SCALE = 1.0          # TODO step 2: fixed divisor(s) after measuring obs ranges
                            #   (the env ALREADY divides raw values by 10 internally)
 HOF_SIZE = 5               # hall of fame: keep this many

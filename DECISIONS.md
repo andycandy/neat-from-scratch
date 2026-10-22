@@ -144,3 +144,9 @@ Section numbers refer to the Unit 4 guide (`unit4_slimevolley.md`).
 **Conclusion:** with 4 games per genome, seed luck dominates the ranking. Selection was close to random: each generation kept the genomes that happened to get easier games, and nothing real accumulated. That explains the plateau, the frozen hall of fame, and the unchecked bloat, since selection could not see whether structure was worth its cost. Even 16 games agree only partly with 4, so the real differences between genomes in this population are small as well.
 
 **Candidate next changes (not yet decided):** more games per genome (E = 4 → 16, which roughly halves the ranking noise, at about 4× the time per generation) and a stronger node penalty (λ = 0.002 → 0.01) to stop bloat and keep generations fast.
+
+## Run `runs/slime4`: noise ablation
+
+**Changes from `slime3`, and nothing else:** `EPISODES` 4 → 16 and `NODE_LAMBDA` 0.002 → 0.01. The seed (0), the fitness formula, the NEAT config and the hall of fame are all unchanged, so `slime3` vs `slime4` is a one-variable ablation of the noise diagnosis (λ is changed alongside it to keep 4× longer generations from being slowed further by bloat).
+
+**Prediction if the diagnosis is right:** rankings become meaningful, so the hall of fame moves off −4.60 and returns per game keep rising past about 0.6 instead of plateauing. If it stays flat even with 16 games, the remaining explanation is that the built-in AI is too strong for a from-scratch population to get any signal. In that case self-play is the next fix (on the README leaderboard, a GA trained by self-play reached a positive score against the built-in AI).
