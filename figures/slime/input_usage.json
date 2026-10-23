@@ -1,0 +1,59 @@
+{
+  "hidden": 3,
+  "enabled_connections": 57,
+  "hidden_activations": [
+    "identity",
+    "sin",
+    "sin"
+  ],
+  "inputs": {
+    "my x": {
+      "connections": 4,
+      "sum_abs_w": 8.53
+    },
+    "my y": {
+      "connections": 5,
+      "sum_abs_w": 8.62
+    },
+    "my vx": {
+      "connections": 3,
+      "sum_abs_w": 7.38
+    },
+    "my vy": {
+      "connections": 4,
+      "sum_abs_w": 2.3
+    },
+    "ball x": {
+      "connections": 5,
+      "sum_abs_w": 9.02
+    },
+    "ball y": {
+      "connections": 3,
+      "sum_abs_w": 2.14
+    },
+    "ball vx": {
+      "connections": 4,
+      "sum_abs_w": 6.93
+    },
+    "ball vy": {
+      "connections": 5,
+      "sum_abs_w": 5.58
+    },
+    "opp x": {
+      "connections": 5,
+      "sum_abs_w": 8.23
+    },
+    "opp y": {
+      "connections": 4,
+      "sum_abs_w": 3.37
+    },
+    "opp vx": {
+      "connections": 5,
+      "sum_abs_w": 5.75
+    },
+    "opp vy": {
+      "connections": 4,
+      "sum_abs_w": 4.2
+    }
+  }
+}

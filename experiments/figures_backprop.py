@@ -85,12 +85,44 @@ def complexification():
     plt.close(fig)
 
 
+def accuracy_vs_connections(run="spiral_s0"):
+    """Every genome of the run's final population: validation accuracy vs connections,
+    with the Pareto front (no other genome is both smaller and at least as accurate)."""
+    path = RUNS / run / "final_population.pkl"
+    if not path.exists():
+        return
+    dataset, seed = run.split("_s")
+    X, y = make_splits(dataset, int(seed))["val"]
+    pts = sorted({(sum(c.enabled for c in g.conns.values()), accuracy(g, X, y))
+                  for g in pickle.loads(path.read_bytes())})
+    top = {}                                   # best accuracy at each connection count
+    for conns, acc in pts:
+        top[conns] = max(acc, top.get(conns, 0.0))
+    front, best = [], -1.0
+    for conns, acc in sorted(top.items()):
+        if acc > best:                         # strictly better than every smaller genome
+            front.append((conns, acc))
+            best = acc
+    fig, ax = plt.subplots(figsize=(6, 4))
+    ax.scatter(*zip(*pts), s=18, color="0.6", label="final population")
+    ax.plot(*zip(*front), color="tab:blue", lw=2, marker="o", ms=6, label="Pareto front")
+    ax.set_xlabel("enabled connections")
+    ax.set_ylabel("validation accuracy")
+    ax.set_title(f"{dataset}, seed {seed}: accuracy vs complexity (generation 40)")
+    ax.legend(fontsize=8, frameon=False)
+    ax.grid(alpha=0.2)
+    fig.tight_layout()
+    fig.savefig(OUT / "accuracy_vs_connections.png", dpi=130)
+    plt.close(fig)
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     for row in [boundary_and_architecture(d) for d in ("circle", "xor", "spiral")]:
         d, seed, acc, hidden, conns = row
         print(f"dataset {d:<6} seed {seed}  test acc {acc:.3f}  hidden {hidden}  connections {conns}")
     complexification()
+    accuracy_vs_connections()
     print(f"saved figures in {OUT}")
 
 

@@ -36,17 +36,20 @@ def node_positions(genome: Genome) -> dict[int, tuple[float, float]]:
     columns: dict[int, list[int]] = {}
     for n, d in depth.items():
         columns.setdefault(d, []).append(n)
+    tallest = max(len(ids) for ids in columns.values())
     pos = {}
     for d, ids in columns.items():
+        gap = (tallest - 1) / (len(ids) - 1) if len(ids) > 1 else 0.0   # spread over the full height
         for k, n in enumerate(sorted(ids)):
-            pos[n] = (float(d), k - (len(ids) - 1) / 2)    # centred around y = 0
+            pos[n] = (float(d), (k - (len(ids) - 1) / 2) * gap)    # centred around y = 0
     return pos
 
 
 def draw_genome(genome: Genome, path: str, input_names: list[str] | None = None,
                 output_names: list[str] | None = None, title: str | None = None) -> None:
     pos = node_positions(genome)
-    fig, ax = plt.subplots(figsize=(7, 4.5))
+    span = max(y for _, y in pos.values()) - min(y for _, y in pos.values())
+    fig, ax = plt.subplots(figsize=(7, max(4.5, 0.55 * (span + 1))))   # room for tall columns
 
     # edges first (zorder 1) so nodes sit on top; width relative to this network's largest weight
     w_max = max([abs(c.weight) for c in genome.conns.values() if c.enabled], default=1.0) or 1.0

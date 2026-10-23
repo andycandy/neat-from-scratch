@@ -75,7 +75,7 @@ Design decisions and their reasons are in [DECISIONS.md](DECISIONS.md).
 - [x] `ruff check` passes (vendored `slime/slimevolley.py` excluded).
 - [x] Remove the leftover scratch file `neat/test.py`.
 - [ ] Add XOR results to the write-up doc.
-- [ ] Write the reason for the distance coefficients in DECISIONS.md, decision 8.
+- [x] Write the reason for the distance coefficients in DECISIONS.md, decision 8 (tested on XOR).
 
 **Unit 4 (Slime Volleyball)**
 - [x] Vendored environment (no gym). A random policy scores −4.8 (README: −4.87).
@@ -85,7 +85,8 @@ Design decisions and their reasons are in [DECISIONS.md](DECISIONS.md).
 - [x] `experiments/watch.py`: searches fresh seeds and saves a GIF of an agent's best game, plus button-usage statistics.
 - [x] Decide on and launch the next run: `slime5` (self-play + lockstep batching).
 - [x] Final evaluation (`experiments/eval_slime.py`): best of top-5 hall of fame on 200 games, then 1,000 new games: −0.852 ± 1.260, win 11.8%, draw 31.0%, loss 57.2%.
-- [ ] Figures from `runs/slime5/stats.csv`, network diagram of the best agent, GIF (`runs/slime5/gen00786_rank0_seed10014.gif`).
+- [x] Figures (`experiments/figures_slime.py` -> `figures/slime/`): training curves, network of the reported agent and of champions at generations 10/50/200/786, input usage, slime5 vs slime6. GIF: `runs/slime5/gen00786_rank0_seed10014.gif`.
+- [ ] Write-ups: skeletons in `writeup/` (Part 1A, Part 1B); prose to write.
 
 ## Slime runs
 

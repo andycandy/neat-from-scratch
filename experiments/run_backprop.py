@@ -36,13 +36,19 @@ def run_one(dataset: str, seed: int, generations: int, out: Path) -> dict:
     out.mkdir(parents=True, exist_ok=True)
     splits = make_splits(dataset, seed)
     pop = Population(make_config(), seed)
-    fitness_fn = train.make_fitness_fn(splits)
+    train_fn = train.make_fitness_fn(splits)
+    last = []                                # the latest evaluated generation (trained weights)
+
+    def fitness_fn(genomes):
+        last[:] = genomes
+        return train_fn(genomes)
+
     t0 = time.time()
     for _ in range(generations):
         pop.run(fitness_fn, 1)
         row = pop.stats[-1]
         print(f"{dataset} s{seed} gen {row['gen']:3d}  best fit {row['best']:.3f}  "
-              f"best val acc {fitness_fn.val_acc.max():.3f}  hidden {row['mean_hidden']:.1f}  "
+              f"best val acc {train_fn.val_acc.max():.3f}  hidden {row['mean_hidden']:.1f}  "
               f"species {row['n_species']}", flush=True)
     best = pop.best                        # chosen by VALIDATION fitness; weights already trained
     X_te, y_te = splits["test"]
@@ -57,6 +63,8 @@ def run_one(dataset: str, seed: int, generations: int, out: Path) -> dict:
     pop.save_stats(str(out / "stats.csv"))
     with open(out / "best.pkl", "wb") as f:
         pickle.dump(best, f)
+    with open(out / "final_population.pkl", "wb") as f:     # for the accuracy-vs-complexity plot
+        pickle.dump(last, f)
     (out / "result.json").write_text(json.dumps(result, indent=2))
     print("RESULT", json.dumps(result), flush=True)
     return result
