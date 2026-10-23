@@ -41,10 +41,10 @@ def make_config() -> NeatConfig:
         max_stagnation=20,
         target_species=(8, 12),
         n_small_cutoff=10**9,          # never divide the distance by N
-        distance_coefficients=(1.0, 1.0, 0.4),   # the paper's (slime6); slime5 used (0.5, 0.5, 0.3)
-        # threshold range doubled with the coefficients (slime5: 3.0, 0.3, 1.0, 6.0), so its cap doesn't bind
-        compat_threshold=6.0, threshold_step=0.6, threshold_min=2.0, threshold_max=12.0,
+        compat_threshold=3.0, threshold_step=0.3, threshold_min=1.0, threshold_max=6.0,
+        p_activation=0.2,              # slime7: 0.05 -> 0.2 (XOR sweep); slime5 = this config with 0.05
     )
+    # slime6 (ablation, worse): distance_coefficients=(1.0, 1.0, 0.4) with the threshold range doubled
 
 
 _ENVS = []   # one game object per game, reused by this process
@@ -212,7 +212,7 @@ def load_latest_checkpoint(out):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--out", default="runs/slime6")
+    ap.add_argument("--out", default="runs/slime7")
     ap.add_argument("--generations", type=int, default=100000)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--resume", action="store_true")

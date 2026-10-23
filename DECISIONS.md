@@ -215,3 +215,23 @@ The networks are small: XOR needs 2–3 hidden nodes, the circle 3, and the spir
 
 **`slime6` result (stopped at generation 681):** the hall of fame reached −3.80 at generation 350 and did not move again through generation 681, while `slime5` was at −0.70 by generation 786. The champion's score on 40 fixed games stayed between −4.6 and −3.9 (`slime5`: about −1.2 at generation 650). Networks grew much larger: 20.3 hidden nodes on average at generation 681, against about 6–9 for `slime5` at the same point. Speciation itself behaved the same (threshold 2.05× `slime5`'s, as intended; 10 species on average; the 12.0 cap never reached), so the threshold rescaling was not the cause. The likely cause is the ratio: with weight differences counting less, new structure founds and keeps its own species more easily, so the population spends its effort on bigger networks that are slower to tune. One seed per setting, so this is evidence, not proof. **Conclusion:** the paper's coefficients helped on XOR (a short run, where the scale matters before the threshold adapts) but not on Slime; our (0.5, 0.5, 0.3) stays. Figure: `figures/slime/ablation.png`.
 
+
+---
+
+# Mutation-rate sweep (XOR) and `slime7`
+
+**XOR sweep** (`experiments/sweep_xor.py`, figure `figures/sweep_xor.png`): one setting changed at a time from the defaults, 20 seeds each, 300-generation limit; 480 runs in 30 s. Every setting solved 20/20. Median generations to solve (interquartile range):
+
+| Setting | Values tried → median generations | Note |
+|---|---|---|
+| `p_activation` | 0.0 → **29** [20–37], 0.05 (default) → 17 [13–25], 0.2 → **13** [11–18] | the only clear effect: 0.0 vs 0.2 differ by 16 generations, 95% bootstrap CI [8, 24] |
+| `sigma` | 0.1 → 22, 0.5 → 17, 1.0 → 16.5, 2.0 → 15.5 | small trend, within noise |
+| `p_weight` | 0.5 → 21, 0.8 → 17, 0.95 → 17.5 | within noise |
+| `p_add_conn` | 0.03 → 21.5, 0.1 → 17, 0.3 → 18.5 | within noise |
+| `p_add_node` | 0.01 → 19, 0.05 → 17, 0.1 → 18.5, 0.2 → 18 | no speed effect, but solution size grows: 1.3 → 4.5 hidden nodes |
+| `p_toggle` | 0.0 → 18.5, 0.01 → 17, 0.05 → 17.5 | no effect |
+| `p_crossover` | 0.0 → 19, 0.25 → 20, 0.75 → 17, 1.0 → 18 | no effect on XOR |
+
+**Why activation mutation matters:** new hidden nodes start as `tanh`. With `p_activation` = 0 every solution uses only `tanh` (77 of 77 hidden nodes) and needs more nodes (3.9 on average). At 0.2 the solutions use `sin` most (20 of 44 nodes), then `tanh`, `relu`, `abs`, `gauss` and `sigmoid`. A `sin` node is non-monotonic, so one node can map the two "different" inputs to one side of 0.5 and the two "same" inputs to the other, which is XOR's shape. XOR is easy, so most settings are within noise; only the activation rate stands out.
+
+**`slime7`:** `slime5` with one change, `p_activation` 0.05 → 0.2, to test whether the XOR result carries over to Slime. Same seed (0) and settings otherwise (the `slime6` coefficients are reverted). Compare with `slime5` at generations 330 and 650–786.
