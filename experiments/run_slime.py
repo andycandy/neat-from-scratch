@@ -42,9 +42,8 @@ def make_config() -> NeatConfig:
         target_species=(8, 12),
         n_small_cutoff=10**9,          # never divide the distance by N
         compat_threshold=3.0, threshold_step=0.3, threshold_min=1.0, threshold_max=6.0,
-        p_activation=0.2,              # slime7: 0.05 -> 0.2 (XOR sweep); slime5 = this config with 0.05
-    )
-    # slime6 (ablation, worse): distance_coefficients=(1.0, 1.0, 0.4) with the threshold range doubled
+    )   # = slime5, the reported run. Ablations (both worse on Slime, see DECISIONS.md):
+        #   slime6: distance_coefficients=(1.0, 1.0, 0.4), threshold range doubled; slime7: p_activation=0.2
 
 
 _ENVS = []   # one game object per game, reused by this process
@@ -212,7 +211,7 @@ def load_latest_checkpoint(out):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--out", default="runs/slime7")
+    ap.add_argument("--out", default="runs/slime8")
     ap.add_argument("--generations", type=int, default=100000)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--resume", action="store_true")

@@ -32,7 +32,10 @@ from run_slime import HallOfFame, load_latest_checkpoint  # noqa: F401  (HallOfF
 from neat.genes import NodeType
 from neat.visualize import draw_genome
 
-RUN, ABLATION = Path("runs/slime5"), Path("runs/slime6")
+RUN = Path("runs/slime5")
+ABLATIONS = {"slime5: defaults": (RUN, "tab:blue"),
+             "slime6: paper's distance coefficients": (Path("runs/slime6"), "tab:orange"),
+             "slime7: p_activation 0.2": (Path("runs/slime7"), "tab:green")}
 OUT = Path("figures/slime")
 STEP, GAMES = 25, 40
 SEEDS = range(300_000, 300_000 + GAMES)        # fixed, never used for selection
@@ -94,11 +97,11 @@ def training_figure(champ):
     plt.close(fig)
 
 
-def ablation_figure(champ5, champ6):
-    d5, d6 = stats(RUN), stats(ABLATION)
+def ablation_figure(champs):
     fig, (a, b) = plt.subplots(1, 2, figsize=(12, 4))
-    for champ, d, name, colour in ((champ5, d5, "slime5: (0.5, 0.5, 0.3)", "tab:blue"),
-                                   (champ6, d6, "slime6: paper (1.0, 1.0, 0.4)", "tab:orange")):
+    for name, champ in champs.items():
+        run, colour = ABLATIONS[name]
+        d = stats(run)
         a.plot(list(champ), list(champ.values()), color=colour, lw=2, marker="o", ms=3, label=name)
         b.plot(d["gen"], d["mean_hidden"], color=colour, lw=1.5, label=name)
     a.set_title(f"champion's pure score vs built-in AI ({GAMES} fixed games)")
@@ -125,11 +128,9 @@ def input_usage(genome):
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     with Pool() as pool:
-        champ5 = champ_scores(pool, RUN)
-        champ6 = champ_scores(pool, ABLATION) if ABLATION.exists() else None
-    training_figure(champ5)
-    if champ6:
-        ablation_figure(champ5, champ6)
+        champs = {name: champ_scores(pool, run) for name, (run, _) in ABLATIONS.items() if run.exists()}
+    training_figure(champs["slime5: defaults"])
+    ablation_figure(champs)
 
     _, hof = load_latest_checkpoint(RUN)
     _, best = hof.ranked()[0]
