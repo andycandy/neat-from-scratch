@@ -195,7 +195,8 @@ My own choices, where they differ from the paper:
 |---|---|---|---|
 | **My NEAT, self-play (slime5)** | 1,000 | **−0.852 ± 1.260** (standard error 0.040) | 11.8% / 31.0% / 57.2% |
 | Random policy (leaderboard) | 1,000 | −4.866 ± 0.372 | — |
-| CMA-ES self-play (TRAINING.md) | — | −0.071 | — |
+| CMA-ES self-play (TRAINING.md) | 1,000 | −0.071 ± 0.827 | — |
+| PPO self-play (TRAINING.md) | 1,000 | −0.371 ± 1.085 | — |
 | GA self-play (leaderboard) | 1,000 | +0.353 ± 0.728 | — |
 | CMA-ES, direct (leaderboard) | 1,000 | +1.148 ± 1.071 | — |
 | PPO (leaderboard) | 1,000 | +1.377 ± 1.133 | — |
@@ -203,7 +204,7 @@ My own choices, where they differ from the paper:
 - A draw means the game reached its 3,000-step limit with lives level.
 - My agent is clearly below both self-play baselines: −0.852 against −0.071 is about 20 of my standard errors.
 - The gap to random play is large, and the agent wins about 1 game in 8.
-- I did not re-run the baselines. Their numbers are quoted from the slimevolleygym README and TRAINING.md.
+- Baseline numbers are the slimevolleygym authors' published results, fetched from their TRAINING.md on 22 Oct (`logs/leaderboard_trainingmd_fetch_2026-10-22.txt`). The random-policy row is from their README. I did not retrain these baselines myself.
 
 **The reported agent's network.**
 - It has 3 hidden nodes (2 `sin`, 1 `identity`) and 57 enabled connections.
