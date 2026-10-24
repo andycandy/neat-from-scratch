@@ -1,9 +1,9 @@
-# Unit 2 — Progress log
+# Progress log (Units 2–4)
 
 A record of what has been built so far, how it was checked, and what is left.
 Design decisions and their reasons are in [DECISIONS.md](DECISIONS.md).
 
-**Status (2026-10-22):** the NEAT core is complete, and XOR solves in 10 of 10 seeds. Backprop-NEAT (Unit 3) is complete apart from figures and the write-up: test accuracy averages circle 0.955, XOR 0.998, spiral 0.923, with 5–18 connections, and padded + vmap training is 5.9×–7.8× faster than per-genome compilation at identical accuracy. Slime Volleyball has had three runs, none of which has learned to score yet; the latest diagnosis points to evaluation noise (see the Slime runs section and DECISIONS.md).
+**Status (2026-10-24):** all experiments are done. NEAT core complete; XOR 10/10 (18.1 ± 9.4 generations). Backprop-NEAT: test accuracy circle 0.955, XOR 0.998, spiral 0.923, with 5–18 connections; padded + vmap training 5.9×–7.8× faster at identical accuracy. Slime Volleyball: self-play (`slime5`) reached −0.852 ± 1.260 over 1,000 fresh games against the built-in AI. Two ablations (`slime6`, `slime7`) and an XOR mutation-rate sweep are logged. Left: the written Part 1 section. The story is in [JOURNEY.md](JOURNEY.md); raw outputs recovered from the session are in `logs/`.
 
 ## Setup
 
@@ -23,9 +23,9 @@ Design decisions and their reasons are in [DECISIONS.md](DECISIONS.md).
 | 6 | `neat/network.py` | `topo_order` (Kahn's algorithm, which raises on a cycle). `compile_genome` builds the evaluation order and per-node incoming lists once. `run` evaluates a batch `(batch, n_in)` → `(batch, n_out)`. | 3 |
 | 7 | `neat/mutation.py` | `mutate_weights` (perturb or replace, then clip), `reachable` (DFS over all connections), `mutate_add_connection` (with a cycle check), `add_node` (split a connection, increment `conns_broken`), `mutate_activation`, `toggle_enable`, and `mutate`, which applies each one with its own probability. All of them return a new genome and never change their input. | 8 |
 | 8 | `neat/crossover.py` | Matching genes come from a random parent. Disjoint and excess genes come from the fitter parent. A gene disabled in either parent stays disabled with probability 0.75. Nodes come from the fitter parent, with shared nodes from a random parent. | 5 |
-| 9 | `neat/species.py` | `compatibility_distance` (excess, disjoint, mean weight difference). The `Species` dataclass. `speciate` picks new representatives from the closest genomes, assigns the rest to the first species under the threshold, and drops empty species. | 6 |
+| 9 | `neat/species.py` | `compatibility_distance` (excess, disjoint, mean weight difference). The `Species` dataclass. `speciate` uses Stanley's rule: each genome joins the first species whose previous representative is within the threshold, or founds a new one; empty species die; the new representative is the member closest to the old one. `adjust_threshold` (dynamic threshold, clamped). | 6 |
 | 10 | `neat/reproduction.py` | `allocate` (largest-remainder child counts). `species_scores` (mean fitness shifted to be non-negative). `update_and_cull` (stagnation, never removing the best species). `breed_species` (elitism, top-30% parent pool, crossover or clone, then mutate, with a new id per child). `reproduce` ties them together, guarantees each species 2 children, and returns the surviving species. | 8 |
-| 11 | `neat/population.py` | The `Population` class. `run` loops: evaluate → track the best → snapshot the champion → stop check → speciate → log stats → adjust the threshold → reproduce. `adjust_threshold` implements the dynamic threshold. `save_stats` writes a CSV. `save` and `load` checkpoint the whole run with pickle. | 5 |
+| 11 | `neat/population.py` | The `Population` class. `run` loops: evaluate → track the best and the champion → stop check (every genome) → speciate → log stats → adjust the threshold → reproduce. `save_stats` writes a CSV. Checkpoints and champion snapshots are written by the Slime runner. | 5 |
 | 12 | `experiments/xor.py` | The XOR benchmark: the fitness `(4 − Σ|y − ŷ|)²`, stopping at the first solved generation, 10 seeds, and a stats CSV per seed in `experiments/results/`. | — |
 
 ## Notable fixes and changes along the way
@@ -48,17 +48,18 @@ Design decisions and their reasons are in [DECISIONS.md](DECISIONS.md).
 - **Speciation fix (found in the first Slime run):** the species count cycled 1 → 19 → 1. There were three causes: (1) dividing the distance by N = 36 made new structure nearly invisible; (2) the dynamic threshold had no cap (windup); (3) old species claimed their closest genome regardless of distance, so the threshold could never shrink the species count. The fixes are N = 1, `threshold_max`, and Stanley's "join the first compatible species, empty species die" rule. Afterwards the species count held at 10–12.
 - **Slime runner:** a vendored environment, parallel evaluation, a hall of fame (min-heap), atomic checkpoints and resume. Fixed the built-in AI's RNN memory leaking between games.
 
-## Test suite (49 tests)
+## Test suite (63 tests)
 
 | File | Covers |
 |---|---|
 | `test_innovation.py` | Same `(src, dst)` gives the same number. The same split in two genomes gives the same node. A second split gives a new node that matches across genomes. |
-| `test_population.py` | Initial genomes share innovation numbers but have different weights. The same seed gives an identical run. Save and load preserve the rng state and the tracker. The threshold rises with too many species, falls with too few, and is clamped. A run with a low starting threshold pulls the species count down. Snapshots are written every generation, and the stats CSV has the new columns. The stop check finds a passing genome that is not the fittest. |
+| `test_population.py` | Initial genomes share innovation numbers but have different weights. The same seed gives an identical run. A pickled population round-trips (what checkpoints rely on). The threshold rises with too many species, falls with too few, and is clamped. A run with a low starting threshold pulls the species count down. The stats CSV has the new columns. The stop check finds a passing genome that is not the fittest. |
 | `test_network.py` | A hand-computed output. Batch results equal row-by-row results. A disabled connection has no effect. |
 | `test_mutation.py` | The parent is unchanged. Weights stay clipped. Mutation is deterministic for a seed. `reachable` follows disabled edges. 1,000 add-connection mutations never create a cycle. Add-node structure is correct. 2,000 chained mutations stay acyclic and runnable, and never target an input. |
 | `test_crossover.py` | Self-crossover returns the same genome. The child's innovations equal the fitter parent's. Every referenced node exists. Disabled genes are re-enabled about 25% of the time. Parents are unchanged. |
 | `test_species.py` | `δ(g, g) = 0`. Distance is symmetric. A hand-computed distance. Identical genomes form 1 species. Distant genomes form 2. Every genome is in exactly one species. A higher threshold merges existing species into one. |
-| `test_slime.py` | The random policy scores about −5. The same genome and seeds give the same fitness, even after other games. Parallel equals serial. The survival bonus never outranks a point. Resume matches an uninterrupted run. The hall of fame keeps the top k, sorted, without duplicates. |
+| `test_slime.py` | The random policy scores about −5. The same genome and seeds give the same fitness, even after other games. Parallel equals serial. The survival bonus never outranks a point. Resume matches an uninterrupted run. The hall of fame keeps the top k, sorted, without duplicates. Lockstep batching equals one game at a time; mirror games are deterministic. |
+| `test_backprop_*.py` | Datasets match the JS port. The padded forward pass equals the NumPy network on random genomes; padding is inert; masked gradients are zero. Whole-population training compiles once and lowers the loss. |
 | `test_reproduction.py` | Largest-remainder examples. Counts always sum to the total, including when all shares are 0. The child count equals the population size. Negative fitness still favours the better species. The elite survives unchanged. A culled species is not returned. The worst species still gets its minimum children. |
 
 ## XOR result
@@ -93,9 +94,9 @@ Design decisions and their reasons are in [DECISIONS.md](DECISIONS.md).
 | Run | Generations | Change | Outcome |
 |---|---|---|---|
 | `runs/slime1` | 0–170 | first version | Species count cycled 1 → 19 → 1. That led to the speciation fixes (Stanley's rule, N = 1, threshold cap). |
-| `runs/slime2` | 0–871 | speciation fixed | Species stable at 9–13, but the population converged on fence-camping. Fitness standard deviation was 0.086 (no signal), and there were 90 hidden nodes (bloat). Hall of fame −4.55. |
-| `runs/slime3` | 0–256 | fitness v2: per-rally survival bonus, returns over the net, node penalty | Agents became active (moving, jumping) and then plateaued: returns about 0.6 per game, hall of fame −4.60. Diagnosis: with 4 games per genome, rankings on two different 4-game sets barely agree (Spearman +0.13), so selection is close to random. |
-| `runs/slime4` | 0–243 | `slime3` + 16 games per genome, node penalty 0.01 (noise ablation) | Hall of fame −4.95 → −4.55 by generation 68, then frozen until it was stopped; returns 0.5–0.8; bloat controlled at first, 16 hidden nodes by the end. Noise was only part of the problem. Next idea: self-play. |
-| `runs/slime5` | 0–1670 (stopped) | 12 self-play (mirror) + 4 built-in AI games per genome; lockstep batching (4× faster) | Hall of fame −4.65 → −0.70 by generation 786, then flat for ~770 generations. 100 fresh games: −1.14, 18.8 returns per game, best game +2. Final, 1,000 new games: −0.852 ± 1.260, win rate 11.8%. Leaderboard self-play: CMA-ES −0.071, GA +0.353. |
+| `runs/slime2` | 0–870 | speciation fixed | Species stable at 9–13, but the population converged on fence-camping. Fitness standard deviation was 0.086 (no signal; `logs/slime2_diagnosis_2026-10-22.txt`), and there were 90 hidden nodes (bloat). Hall of fame −4.55. |
+| `runs/slime3` | 0–256 | fitness v2: per-rally survival bonus, returns over the net, node penalty | Agents became active (moving, jumping) and then plateaued: returns about 0.6 per game, hall of fame −4.60. Diagnosis: with 4 games per genome, rankings on two different 4-game sets barely agree (Spearman +0.13, `logs/slime3_noise_check_2026-10-22.txt`), so selection is close to random. |
+| `runs/slime4` | 0–243 | `slime3` + 16 games per genome, node penalty 0.01 (noise ablation) | Hall of fame −4.95 → −4.55 by generation 60, then frozen until it was stopped; returns 0.5–0.8; bloat controlled at first, 16 hidden nodes by the end. Noise was only part of the problem. Next idea: self-play. |
+| `runs/slime5` | 0–1670 (stopped) | 12 self-play (mirror) + 4 built-in AI games per genome; lockstep batching (4× faster) | Hall of fame −4.85 → −0.70 by generation 620, then flat until the stop (~1,050 generations). 100 fresh games: −1.14, 18.8 returns per game, best game +2. Final, 1,000 new games: −0.852 ± 1.260, win rate 11.8%. Leaderboard self-play: CMA-ES −0.071, GA +0.353. |
 | `runs/slime6` | 0–681 (stopped) | `slime5` + the paper's distance coefficients (1.0, 1.0, 0.4), threshold range doubled | Hall of fame stuck at −3.80 from generation 350; 20 hidden nodes on average (vs −0.70 and 6–9 for `slime5`). The paper's coefficients do not help on Slime (one seed). |
 | `runs/slime7` | 0–647 (stopped) | `slime5` + `p_activation` 0.05 -> 0.2 (from the XOR sweep) | Hall of fame −2.55 at 647 (`slime5`: −0.70 by 786); ahead of `slime5` until about generation 300, then behind. Does not carry over from XOR (one seed). |

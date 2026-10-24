@@ -15,4 +15,4 @@ dev = [
 ]
 
 [tool.ruff]
-extend-exclude = ["slime/slimevolley.py"]   # vendored game code, kept as upstream
+extend-exclude = ["slime/slimevolley.py", "logs"]   # vendored game code; recovered evidence kept verbatim
