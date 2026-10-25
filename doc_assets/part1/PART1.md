@@ -128,7 +128,7 @@
   - Comparison: a fixed circle rule (radius 3.125) scores 0.975 on both validation and test for that seed.
   - So the genome beat the rule by 1.5 points on validation (selection fitting validation noise), then fell 4.5 points below it on test (a boundary that generalizes worse than a circle where data is sparse).
 - **Activations.** `tanh` dominates, partly because it is the default for new nodes. The only `sin` nodes appear in the spiral solutions, one per seed.
-- **Reproducibility.** The spiral runs were accidentally executed twice, and a later rerun of seed 0 gave identical results each time.
+- **Reproducibility.** Reruns of spiral seed 0 gave identical results.
 
 [FIGURE 5: figures/fig05_backprop_spiral_pareto.png]
 *Figure 5. The penalty chooses along a nearly flat front: going from 16 to 18 connections buys only 0.005 validation accuracy.*
@@ -196,7 +196,7 @@
   - −0.70 is its hall-of-fame score on 20 games.
   - −1.005 is the selection score on 200 games.
   - −1.14 is a 100-game check during training.
-  - The 20-game score was optimistic. **Only the 1,000-game −0.852 is the result.**
+  - The 20-game score was optimistic. **Only the 1,000-game −0.852 is the result.** It is within about 2 standard errors of the smaller checks (1.7 for the 200-game −1.005, 2.3 for the 100-game −1.14).
 
 **The reported agent's network.**
 - 3 hidden nodes (2 `sin`, 1 `identity`) and 57 enabled connections.
@@ -252,7 +252,7 @@
 | Split-node id | Keyed by the split connection | Keyed by (connection, times split), so repeated splits match across genomes |
 | Bias | Bias input node | Per-node bias, mutated like a weight |
 | Equal-fitness crossover | Union of both parents' genes | One parent's structure, to avoid cycles |
-| Interspecies crossover | Rate 0.001 | Dropped |
+| Interspecies crossover | Rate 0.001 | Dropped: at 0.001 it would affect about 0.15 of 150 children per generation, so I left it out for simplicity |
 | Distance normalisation N | Larger genome's gene count (1 under 20 genes) | Kept for XOR; N = 1 for Slime, which starts at 36 connections |
 | Species assignment | First compatible species | Same (an earlier "claim closest genome" rule caused the slime1 cycling) |
 | Species threshold | Fixed (3.0) in the paper's XOR setup | Adaptive, 8–12 species, clamped |
@@ -266,7 +266,7 @@ I did not tune the population size (150) or the Backprop-NEAT optimizer.
 
 ## 6. What was new to me
 
-- JAX. Coming from C++, I had to think in function transforms instead of loops: `grad` returns a gradient function, `vmap` batches a one-genome function, and arrays are never updated in place. Padding genomes so that one compiled program fits all of them was the step that made it click.
+- Batching variable-topology graphs into one compiled program. Every genome is a different graph, so I padded each to a fixed 32-node shape, masked the missing connections so they get zero gradient, and used `vmap` over genomes so one `jit` trains the whole population. Getting the masking right, and proving it with equivalence and zero-gradient tests, was the new part.
 - Evolution as an experiment loop. Most of my Slime time went into finding out why selection had no signal: speciation, a flat fitness, evaluation noise, then opponent strength. I fixed one cause per run, and checked each with a small measurement before changing anything.
 
 ## 7. Limitations and next steps
