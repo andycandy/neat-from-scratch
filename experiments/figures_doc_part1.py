@@ -16,6 +16,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.lines import Line2D
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -220,6 +221,26 @@ def slime_complexification():
     save(fig, "fig08_slime_complexification.png")
 
 
+def slime_champion_snapshots():
+    """Generation champion at 4 points of slime5, 2x2. Inputs/outputs in the same order as Fig 7."""
+    fig, axs = plt.subplots(2, 2, figsize=(W, 4.6))
+    used = set()
+    for ax, gen in zip(axs.flat, (10, 50, 200, 786)):
+        g = pickle.loads(Path(f"runs/slime5/best/gen_{gen:04d}.pkl").read_bytes())
+        draw_network(ax, g, [""] * 12, [""] * 3)
+        ax.get_legend().remove()
+        hidden = [n.activation for n in g.nodes.values() if n.type == NodeType.HIDDEN]
+        used |= set(hidden)
+        ax.set_title(f"gen {gen}: {len(hidden)} hidden, {sum(c.enabled for c in g.conns.values())} conns")
+    dot = {"marker": "o", "ls": "", "ms": 6, "markeredgecolor": "black", "markeredgewidth": 0.6}
+    handles = [Line2D([], [], color=ACT_COLOURS[a], label=a, **dot) for a in sorted(used | {"tanh"})]
+    handles += [Line2D([], [], color="tab:blue", label="w > 0"), Line2D([], [], color="tab:red", label="w < 0")]
+    fig.legend(handles=handles, loc="lower center", ncol=5, frameon=False, bbox_to_anchor=(0.5, -0.02),
+               handlelength=1.2, columnspacing=1.0)
+    fig.tight_layout(rect=(0, 0.08, 1, 1))
+    save(fig, "fig08b_slime_champion_snapshots.png")
+
+
 def slime_ablations():
     runs = [("slime5: chosen settings", ["runs/slime5.log"], "tab:blue"),
             ("slime6: paper's distance coefficients", ["runs/slime6/log.txt", "runs/slime6/log_resume1.txt"], "tab:orange"),
@@ -245,6 +266,7 @@ def main():
     slime_runs()
     slime_network()
     slime_complexification()
+    slime_champion_snapshots()
     slime_ablations()
     shutil.copy("runs/slime5/gen00786_rank0_seed10014.gif", OUT / "fig10_slime_game.gif")
     print("copied GIF")
