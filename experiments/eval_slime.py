@@ -1,4 +1,4 @@
-"""Final Unit 4 evaluation. Selection and reporting use separate fresh seeds (never seen in training):
+"""Final Slime evaluation. Selection and reporting use separate fresh seed ranges:
 select: the top-5 hall-of-fame agents each play the same 200 games, keep the best;
 report: that one agent on 1,000 different games (the leaderboard's protocol).
 

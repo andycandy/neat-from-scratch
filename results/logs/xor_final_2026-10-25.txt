@@ -1,0 +1,12 @@
+seed 0: gen  10  fitness  9.610  hidden 2  solved True  outputs [0.008 0.546 0.846 0.284]
+seed 1: gen  18  fitness  6.488  hidden 2  solved True  outputs [0.499 0.868 0.601 0.422]
+seed 2: gen  15  fitness 12.315  hidden 1  solved True  outputs [0.002 1.    0.936 0.425]
+seed 3: gen  19  fitness 11.195  hidden 4  solved True  outputs [0.072 0.632 0.804 0.018]
+seed 4: gen  40  fitness  8.330  hidden 6  solved True  outputs [0.029 0.604 0.609 0.297]
+seed 5: gen  21  fitness 10.948  hidden 2  solved True  outputs [0.448 0.95  0.815 0.008]
+seed 6: gen  21  fitness 14.784  hidden 5  solved True  outputs [0.01  0.995 0.992 0.132]
+seed 7: gen   7  fitness 14.348  hidden 2  solved True  outputs [0.127 0.998 0.936 0.019]
+seed 8: gen  24  fitness 11.806  hidden 1  solved True  outputs [0.008 0.998 0.94  0.495]
+seed 9: gen   6  fitness  7.024  hidden 2  solved True  outputs [0.493 0.782 0.793 0.432]
+solved 10/10
+generations to solve: 18.1 +- 9.4

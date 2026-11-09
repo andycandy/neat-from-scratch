@@ -1,4 +1,4 @@
-"""Inner loop of Backprop-NEAT (Unit 3 §4, §6, §7, §12).
+"""Inner loop of Backprop-NEAT.
 
 fitness_fn(genomes):
     pack every genome  ->  stack into (P, ...) arrays  ->  ONE jitted, vmapped call trains all P

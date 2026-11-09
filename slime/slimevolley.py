@@ -12,7 +12,7 @@ https://github.com/hardmaru/neuralslimevolley
 No dependencies apart from Numpy and Gym
 
 ---------------------------------------------------------------------------
-VENDORED COPY for this project (NEAT, Unit 4). Source:
+VENDORED COPY for this project (NEAT experiments). Source:
 https://github.com/hardmaru/slimevolleygym/blob/master/slimevolleygym/slimevolley.py
 
 Changes from the original (game physics, rules, observations and the built-in

@@ -1,0 +1,3 @@
+resumed from runs\slime5\checkpoints\gen_01670.pkl
+reported agent (hall of fame #0 at gen 1670) replaying the GIF game, seed 10014: score +2, 3000 steps, 22 returns
+GIF (gen 786, hall of fame #0): score +2, 3000 steps, 22 returns (results/logs/slime5_fresh100_gen786_2026-10-22.txt)

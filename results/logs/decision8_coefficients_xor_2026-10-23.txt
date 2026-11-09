@@ -1,0 +1,28 @@
+# Decision 8: distance coefficients on XOR, ours vs the paper's
+# Raw terminal output, copied verbatim (home folder redacted as <home>).
+# Command run at 2026-10-23 02:35:15 IST; output returned at 2026-10-23 02:35:24 IST.
+
+## Command
+cd "<home>/Desktop/Projects/NEAT-proj" && S="<scratch>/coef.py" && cat > "$S" <<'EOF'
+import sys
+sys.path.insert(0, "experiments"); sys.path.insert(0, ".")
+import numpy as np
+from xor import fitness, solved
+from neat.config import NeatConfig
+from neat.population import Population
+for coef in [(0.5, 0.5, 0.3), (1.0, 1.0, 0.4)]:
+    cfg = NeatConfig(num_inputs=2, num_outputs=1, distance_coefficients=coef)
+    gens = []
+    for s in range(10):
+        pop = Population(cfg, s)
+        best = pop.run(fitness, 300, stop=solved)
+        if solved(best):
+            gens.append(pop.generation)
+    print(coef, f"solved {len(gens)}/10", f"{np.mean(gens):.1f} +- {np.std(gens):.1f}", gens, flush=True)
+EOF
+uv run python "$S"
+
+## Output
+(0.5, 0.5, 0.3) solved 10/10 18.1 +- 9.4 [10, 18, 15, 19, 40, 21, 21, 7, 24, 6]
+
+(1.0, 1.0, 0.4) solved 10/10 9.8 +- 3.2 [13, 16, 9, 11, 5, 9, 10, 12, 7, 6]

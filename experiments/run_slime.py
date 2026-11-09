@@ -1,4 +1,4 @@
-"""Slime Volleyball with NEAT. Reasons for every setting: DECISIONS.md, Unit 4.
+"""Slime Volleyball with NEAT. Reasons for every setting: docs/notebook.md, Slime Volleyball.
 
 uv run python experiments/run_slime.py --out runs/slime5
 uv run python experiments/run_slime.py --out runs/slime5 --resume
@@ -42,7 +42,7 @@ def make_config() -> NeatConfig:
         target_species=(8, 12),
         n_small_cutoff=10**9,          # never divide the distance by N
         compat_threshold=3.0, threshold_step=0.3, threshold_min=1.0, threshold_max=6.0,
-    )   # = slime5, the reported run. Ablations (both worse on Slime, see DECISIONS.md):
+    )   # = slime5, the reported run. Ablations (both worse on Slime, see docs/report.md):
         #   slime6: distance_coefficients=(1.0, 1.0, 0.4), threshold range doubled; slime7: p_activation=0.2
 
 

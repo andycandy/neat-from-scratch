@@ -1,4 +1,4 @@
-"""Unit 3 §18 equivalence tests for backprop/padded.py. They fail until pack/forward/unpack exist."""
+"""Equivalence tests: the padded JAX network in backprop/padded.py must match neat.network."""
 
 import numpy as np
 import pytest
@@ -22,7 +22,7 @@ def _fwd(g, x, n_max=32):
     return np.asarray(padded.forward(p.W, p.M, p.b, p.act, p.out_idx, x))
 
 
-def unit1_genome():
+def hand_genome():
     nodes = {0: NodeGene(0, NodeType.INPUT, None, 0.0), 1: NodeGene(1, NodeType.INPUT, None, 0.0),
              2: NodeGene(2, NodeType.OUTPUT, "sigmoid", 0.0), 3: NodeGene(3, NodeType.HIDDEN, "tanh", 0.0)}
     conns = {0: ConnGene(0, 0, 3, 0.5, True), 1: ConnGene(1, 1, 3, -1.0, True),
@@ -41,8 +41,8 @@ def random_genomes(n=100):
     return gs
 
 
-def test_unit1_example_0731():
-    out = _fwd(unit1_genome(), np.array([[1.0, 0.5]], dtype=np.float32), n_max=5)
+def test_hand_computed_example_0731():
+    out = _fwd(hand_genome(), np.array([[1.0, 0.5]], dtype=np.float32), n_max=5)
     assert out.shape == (1, 1) and abs(out[0, 0] - 0.731) < 1e-3
 
 

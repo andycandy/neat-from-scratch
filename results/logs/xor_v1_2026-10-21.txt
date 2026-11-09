@@ -1,0 +1,61 @@
+# XOR, first version of the NEAT core (before the reproduction fixes)
+# Raw terminal output, copied verbatim (home folder redacted as <home>).
+# Command run at 2026-10-21 20:13:14 IST; output returned at 2026-10-21 20:13:30 IST.
+
+## Command
+sed -i 's/print(f"solved {len(gens_to_solve)}\/{len(seeds)}", end="")/print(f"solved {len(gens_to_solve)}\/{len(seeds)}", end="")/; s/generations mean {np.mean(gens_to_solve):.1f} ± {np.std/generations mean {np.mean(gens_to_solve):.1f} +- {np.std/' experiments/xor.py && uv run python -c "
+import sys; sys.path.insert(0,'experiments'); import xor; xor.main(seeds=range(10))" 2>&1 | tail -11
+cat >> tests/test_population.py <<'E'
+
+
+def test_same_seed_same_run():
+    from neat.population import Population
+
+    def fit(genomes):
+        from neat.network import compile_genome, run
+        x = np.array([[0, 0], [0, 1], [1, 0], [1, 1.]])
+        return np.array([-np.abs(run(compile_genome(g), x)[:, 0] - [0, 1, 1, 0]).sum()
+                         for g in genomes])
+
+    cfg = NeatConfig(num_inputs=2, num_outputs=1, pop_size=30)
+    a, b = Population(cfg, 7), Population(cfg, 7)
+    assert a.run(fit, 10).fitness == b.run(fit, 10).fitness
+    assert a.stats == b.stats
+
+
+def test_save_load_roundtrip(tmp_path):
+    from neat.population import Population
+    cfg = NeatConfig(num_inputs=2, num_outputs=1, pop_size=20)
+    p = Population(cfg, 1)
+    p.save(str(tmp_path / "ck.pkl"))
+    q = Population.load(str(tmp_path / "ck.pkl"))
+    assert q.rng.random() == p.rng.random() and q.tracker.conn_registry == p.tracker.conn_registry
+E
+uv run python -m pytest -q tests 2>&1 | tail -2
+
+## Output
+seed 0: gen  16  fitness 15.708  hidden 2  solved True  outputs [0.002 0.97  0.997 0.002]
+
+seed 1: gen  15  fitness 15.114  hidden 2  solved True  outputs [0.03  0.991 0.989 0.062]
+
+seed 2: gen  22  fitness 15.620  hidden 3  solved True  outputs [0.016 0.992 0.997 0.021]
+
+seed 3: gen  22  fitness 15.269  hidden 1  solved True  outputs [0.032 0.997 0.979 0.036]
+
+seed 4: gen  26  fitness 15.734  hidden 2  solved True  outputs [0.    1.    1.    0.033]
+
+seed 5: gen  13  fitness 15.222  hidden 3  solved True  outputs [0.004 0.98  0.948 0.023]
+
+seed 6: gen  74  fitness 15.403  hidden 5  solved True  outputs [0.    1.    1.    0.075]
+
+seed 7: gen  22  fitness 15.107  hidden 5  solved True  outputs [0.089 1.    1.    0.024]
+
+seed 8: gen  38  fitness 15.561  hidden 2  solved True  outputs [0.    1.    1.    0.055]
+
+seed 9: gen  17  fitness 15.388  hidden 3  solved True  outputs [0.057 1.    1.    0.02 ]
+
+solved 10/10  generations mean 26.5 +- 17.2
+
+..................................                                       [100%]
+
+34 passed in 9.67s

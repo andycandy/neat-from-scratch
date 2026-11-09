@@ -1,0 +1,30 @@
+# Lockstep batching vs one game at a time (16 AI games)
+# Raw terminal output, copied verbatim (home folder redacted as <home>).
+# Command run at 2026-10-22 21:47:25 IST; output returned at 2026-10-22 21:48:07 IST.
+
+## Command
+uv run python -m pytest -q tests 2>&1 | grep -A2 "Warning" | head -6; wc -l experiments/run_slime.py; uv run python -c "
+import sys, time; sys.path.insert(0,'experiments')
+import run_slime as r
+from neat.population import Population
+from neat.network import compile_genome
+from neat.mutation import mutate
+import numpy as np
+p = Population(r.make_config(), 0); g = p.genomes[0]
+for _ in range(40): g = mutate(g, p.cfg, p.tracker, p.rng)
+net = compile_genome(g); seeds = list(range(16))
+t = time.time(); one = [r.play(net, r.SlimeVolleyEnv(), s) for s in seeds]; t1 = time.time() - t
+t = time.time(); bat = r.play_batch(net, r._envs(16), seeds, 0); t2 = time.time() - t
+steps = sum(x[1] for x in one)
+print(f'16 AI games, {steps} steps: one-by-one {t1:.2f}s, lockstep {t2:.2f}s -> {t1/t2:.1f}x faster, identical: {one == bat}')
+"
+
+## Output
+  <home>\Desktop\Projects\NEAT-proj\.venv\Lib\site-packages\numpy\_core\fromnumeric.py:3862: RuntimeWarning: Mean of empty slice
+    return _methods._mean(a, axis=axis, dtype=dtype,
+
+--
+  <home>\Desktop\Projects\NEAT-proj\.venv\Lib\site-packages\numpy\_core\_methods.py:142: RuntimeWarning: invalid value encountered in scalar divide
+    ret = ret.dtype.type(ret / rcount)
+246 experiments/run_slime.py
+16 AI games, 10340 steps: one-by-one 0.89s, lockstep 0.22s -> 4.0x faster, identical: True

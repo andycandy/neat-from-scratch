@@ -1,4 +1,4 @@
-"""Unit 4 §16 tests. Fill these in as you build experiments/slime.py."""
+"""Slime Volleyball: environment, fitness determinism, parallel/resume equivalence, hall of fame."""
 import sys
 from pathlib import Path
 

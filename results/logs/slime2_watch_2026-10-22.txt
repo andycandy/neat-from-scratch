@@ -1,0 +1,29 @@
+# slime2 hall-of-fame #0 watched: button usage (fence-camping)
+# Raw terminal output, copied verbatim (home folder redacted as <home>).
+# Command run at 2026-10-22 12:41:11 IST; output returned at 2026-10-22 12:41:19 IST.
+
+## Command
+python - <<'EOF'
+p='experiments/watch.py'
+s=open(p).read()
+s=s.replace("from run_slime import INPUT_SCALE, load_latest_checkpoint  # noqa: E402\n",
+"import __main__  # noqa: E402\nimport run_slime  # noqa: E402\nfrom run_slime import INPUT_SCALE, load_latest_checkpoint  # noqa: E402\n\n"
+"# checkpoints were written by run_slime.py running AS __main__, so pickle recorded\n"
+"# the class as __main__.HallOfFame; point that name at the real class before loading\n"
+"__main__.HallOfFame = run_slime.HallOfFame\n")
+open(p,'w').write(s)
+EOF
+uv run python experiments/watch.py --run runs/slime2 --rank 0 --seed 123 2>&1 | tail -6
+
+## Output
+resumed from runs\slime2\checkpoints\gen_00871.pkl
+
+hall-of-fame #0: reliable score -4.55; this game -5 in 656 steps
+
+button pressed (fraction of steps): forward 90%, backward 47%, jump 55%
+
+most common [fwd, back, jump]: (np.int64(1), np.int64(0), np.int64(1)) 32%, (np.int64(1), np.int64(1), np.int64(0)) 26%, (np.int64(1), np.int64(0), np.int64(0)) 18%
+
+agent x range over the game: 10.0 (court half is ~11 wide)
+
+saved runs\slime2\watch_rank0_seed123.gif

@@ -1,4 +1,4 @@
-"""Unit 3 §18: training reduces loss; the whole run compiles once."""
+"""Backprop-NEAT inner loop: training reduces loss; the whole run compiles once."""
 import numpy as np
 
 from backprop import train

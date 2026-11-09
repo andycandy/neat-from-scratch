@@ -1,0 +1,21 @@
+# slime5 hall-of-fame #0 on 40 fresh games at generation 380
+# Raw terminal output, copied verbatim (home folder redacted as <home>).
+# Command run at 2026-10-22 22:40:03 IST; output returned at 2026-10-22 22:41:55 IST.
+
+## Command
+uv run python experiments/watch.py --run runs/slime5 --best-of 40 2>&1 | Select-String -NotMatch "resumed"
+
+## Output
+searched 40 games (gen 380): mean score -2.35, best +1, returns/game 14.1
+
+best game: seed 10014, score +1, 19 returns
+
+hall-of-fame #0: reliable score -1.95; this game +1 in 3000 steps
+
+button pressed (fraction of steps): forward 56%, backward 46%, jump 92%
+
+most common [fwd, back, jump]: (1, 1, 1) 25%, (0, 0, 1) 24%, (1, 0, 1) 24%
+
+agent x range over the game: 20.5 (its whole half spans 2.0 to 22.5, i.e. 20.5)
+
+saved runs\slime5\gen00380_rank0_seed10014.gif

@@ -38,7 +38,7 @@ def solved(g: Genome) -> bool:
 
 def main(seeds=range(10), generations: int = 300) -> None:
     cfg = NeatConfig(num_inputs=2, num_outputs=1)   # output_activation defaults to sigmoid
-    out_dir = Path(__file__).parent / "results"
+    out_dir = Path(__file__).resolve().parent.parent / "results" / "xor"
     out_dir.mkdir(exist_ok=True)
     solved_at = []
     for s in seeds:

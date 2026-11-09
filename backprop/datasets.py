@@ -2,7 +2,7 @@
 (itself adapted from TensorFlow Playground).
 
 Same as the JS: 200 points per split, noise 0.5, the same sampling formulas.
-Differences (logged in DECISIONS.md, Unit 3):
+Differences (see docs/notebook.md, Backprop-NEAT):
   * the JS makes train + test only; we also make a validation split with the same
     generator, because fitness must not be computed on train or test data;
   * randomness comes from a seeded numpy Generator (JS used Math.random), so

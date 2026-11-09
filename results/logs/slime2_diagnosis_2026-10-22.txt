@@ -1,0 +1,50 @@
+# slime2 final-population diagnosis (fence-camping, flat fitness)
+# Raw terminal output, copied verbatim (home folder redacted as <home>).
+# Command run at 2026-10-22 12:41:46 IST; output returned at 2026-10-22 12:42:35 IST.
+
+## Command
+cat > runs/diag.py <<'EOF'
+import sys, numpy as np
+from pathlib import Path
+from multiprocessing import Pool
+sys.path.insert(0, "."); sys.path.insert(0, "experiments")
+import __main__, run_slime
+__main__.HallOfFame = run_slime.HallOfFame
+from neat.genes import NodeType
+
+if __name__ == "__main__":
+    pop, hof = run_slime.load_latest_checkpoint(Path("runs/slime2"))
+    seeds = [11, 22, 33, 44]
+    with Pool(12, initializer=run_slime._init_worker) as pool:
+        res = pool.map(run_slime.evaluate_genome, [(g, seeds) for g in pop.genomes])
+    fit = np.array([r[0] for r in res]); sc = np.array([np.mean(r[1]) for r in res])
+    ln = np.array([np.mean(r[2]) for r in res])
+    print("fitness  min %.2f  median %.2f  max %.2f  std %.3f" % (fit.min(), np.median(fit), fit.max(), fit.std()))
+    print("score    distribution:", dict(zip(*np.unique(np.round(sc, 2), return_counts=True))))
+    print("episode length  min %d  median %d  max %d" % (ln.min(), np.median(ln), ln.max()))
+    print("genomes that scored ANY point in 4 games: %d / %d" % (sum(max(r[1]) > -5 for r in res), len(res)))
+    # how many hidden nodes actually reach an output (via enabled conns)?
+    g = hof.ranked()[0][1]
+    en = [c for c in g.conns.values() if c.enabled]
+    outs = {n for n, x in g.nodes.items() if x.type == NodeType.OUTPUT}
+    live, frontier = set(outs), list(outs)
+    while frontier:
+        n = frontier.pop()
+        for c in en:
+            if c.dest == n and c.src not in live:
+                live.add(c.src); frontier.append(c.src)
+    hid = [n for n, x in g.nodes.items() if x.type == NodeType.HIDDEN]
+    print("best hof genome: %d hidden, %d reach an output; %d enabled / %d total conns" %
+          (len(hid), len(live & set(hid)), len(en), len(g.conns)))
+    ins = [n for n, x in g.nodes.items() if x.type == NodeType.INPUT]
+    print("inputs connected to output path:", sorted(live & set(ins)))
+EOF
+uv run python runs/diag.py 2>&1 | grep -v resumed
+
+## Output
+fitness  min -4.66  median -4.64  max -4.13  std 0.086
+score    distribution: {np.float64(-4.75): np.int64(135), np.float64(-4.5): np.int64(14), np.float64(-4.25): np.int64(1)}
+episode length  min 540  median 657  max 758
+genomes that scored ANY point in 4 games: 150 / 150
+best hof genome: 55 hidden, 55 reach an output; 219 enabled / 223 total conns
+inputs connected to output path: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]

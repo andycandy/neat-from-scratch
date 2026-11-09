@@ -1,0 +1,60 @@
+# XOR after the 'check every genome' stop fix (the first committed XOR result)
+# Raw terminal output, copied verbatim (home folder redacted as <home>).
+# Command run at 2026-10-22 00:17:18 IST; output returned at 2026-10-22 00:17:38 IST.
+
+## Command
+python - <<'EOF'
+p='neat/population.py'
+s=open(p).read()
+s=s.replace("            stopping = stop is not None and stop(champ)\n",
+"            # any genome may pass, not just the top-fitness one\n            passed = [g for g in self.genomes if stop(g)] if stop is not None else []\n            stopping = bool(passed)\n")
+s=s.replace("            if stopping:\n                return champ","            if stopping:\n                return max(passed, key=lambda g: g.fitness)")
+s=s.replace('"""Evolve. Returns the generation champion that satisfied `stop`, else the best ever.\n        If `stop` fires, self.generation is the first generation whose champion passed it."""',
+'"""Evolve. If any genome satisfies `stop`, returns the fittest such genome, and\n        self.generation is the first generation where one passed. Otherwise returns the best ever."""')
+open(p,'w').write(s)
+EOF
+grep -n "passed\|Evolve" neat/population.py; cat >> tests/test_population.py <<'EOF'
+
+
+def test_stop_checks_every_genome():
+    from neat.population import Population
+    cfg = NeatConfig(num_inputs=2, num_outputs=1, pop_size=20)
+    p = Population(cfg, 0)
+    target = p.genomes[5]                                      # not the fittest
+    fits = lambda gs: np.array([1.0 if g is gs[0] else 0.0 for g in gs])
+    got = p.run(fits, 5, stop=lambda g: g is target)
+    assert got is target and p.generation == 0
+EOF
+uv run python -m pytest -q tests 2>&1 | tail -1; uv run python experiments/xor.py
+
+## Output
+70:        """Evolve. If any genome satisfies `stop`, returns the fittest such genome, and
+71:        self.generation is the first generation where one passed. Otherwise returns the best ever."""
+88:            passed = [g for g in self.genomes if stop(g)] if stop is not None else []
+89:            stopping = bool(passed)
+97:                return max(passed, key=lambda g: g.fitness)
+41 passed in 14.12s
+
+seed 0: gen   7  fitness  7.622  hidden 2  solved True  outputs [0.193 0.519 0.933 0.498]
+
+seed 1: gen  21  fitness  9.473  hidden 3  solved True  outputs [0.001 0.601 0.91  0.432]
+
+seed 2: gen  17  fitness 10.726  hidden 1  solved True  outputs [0.006 0.999 0.744 0.463]
+
+seed 3: gen   7  fitness  8.028  hidden 1  solved True  outputs [0.285 0.843 0.715 0.439]
+
+seed 4: gen  12  fitness  7.796  hidden 3  solved True  outputs [0.317 0.757 0.608 0.255]
+
+seed 5: gen  34  fitness 13.326  hidden 3  solved True  outputs [0.    0.876 1.    0.226]
+
+seed 6: gen  29  fitness  9.912  hidden 3  solved True  outputs [0.025 0.963 0.672 0.462]
+
+seed 7: gen   6  fitness  9.309  hidden 3  solved True  outputs [0.326 0.866 0.756 0.245]
+
+seed 8: gen  14  fitness 10.131  hidden 4  solved True  outputs [0.092 0.65  0.957 0.332]
+
+seed 9: gen   6  fitness  7.024  hidden 2  solved True  outputs [0.493 0.782 0.793 0.432]
+
+solved 10/10
+
+generations to solve: 15.3 +- 9.5

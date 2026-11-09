@@ -1,0 +1,481 @@
+param,value,seed,solved,gens,hidden,acts
+p_weight,0.5,0,True,22,1,sin
+p_weight,0.5,1,True,14,2,sin tanh
+p_weight,0.5,2,True,27,1,sin
+p_weight,0.5,3,True,12,1,sin
+p_weight,0.5,4,True,36,5,sin tanh tanh tanh tanh
+p_weight,0.5,5,True,28,3,sin tanh tanh
+p_weight,0.5,6,True,26,2,sin sin
+p_weight,0.5,7,True,20,4,tanh tanh tanh tanh
+p_weight,0.5,8,True,18,3,sin tanh tanh
+p_weight,0.5,9,True,24,4,sin tanh tanh tanh
+p_weight,0.5,10,True,9,2,abs tanh
+p_weight,0.5,11,True,41,7,sin tanh tanh tanh tanh tanh tanh
+p_weight,0.5,12,True,26,4,sin tanh tanh tanh
+p_weight,0.5,13,True,10,2,sin tanh
+p_weight,0.5,14,True,14,3,sin tanh tanh
+p_weight,0.5,15,True,24,5,sin tanh tanh tanh tanh
+p_weight,0.5,16,True,12,2,sin tanh
+p_weight,0.5,17,True,19,3,sin tanh tanh
+p_weight,0.5,18,True,34,4,abs relu tanh tanh
+p_weight,0.5,19,True,17,4,sin tanh tanh tanh
+p_weight,0.8,0,True,10,2,sin tanh
+p_weight,0.8,1,True,18,2,tanh tanh
+p_weight,0.8,2,True,15,1,sin
+p_weight,0.8,3,True,19,4,abs sin tanh tanh
+p_weight,0.8,4,True,40,6,tanh tanh tanh tanh tanh tanh
+p_weight,0.8,5,True,21,2,sin tanh
+p_weight,0.8,6,True,21,5,sin tanh tanh tanh tanh
+p_weight,0.8,7,True,7,2,abs sin
+p_weight,0.8,8,True,24,1,sin
+p_weight,0.8,9,True,6,2,sin tanh
+p_weight,0.8,10,True,16,3,abs sin tanh
+p_weight,0.8,11,True,29,2,tanh tanh
+p_weight,0.8,12,True,8,2,sin tanh
+p_weight,0.8,13,True,29,3,sin tanh tanh
+p_weight,0.8,14,True,13,2,sin tanh
+p_weight,0.8,15,True,12,4,sin tanh tanh tanh
+p_weight,0.8,16,True,16,3,sin sin tanh
+p_weight,0.8,17,True,34,4,tanh tanh tanh tanh
+p_weight,0.8,18,True,36,3,sin tanh tanh
+p_weight,0.8,19,True,16,1,sin
+p_weight,0.95,0,True,22,3,tanh tanh tanh
+p_weight,0.95,1,True,29,3,tanh tanh tanh
+p_weight,0.95,2,True,16,1,sin
+p_weight,0.95,3,True,19,4,abs gauss tanh tanh
+p_weight,0.95,4,True,7,2,gauss tanh
+p_weight,0.95,5,True,17,3,tanh tanh tanh
+p_weight,0.95,6,True,18,3,tanh tanh tanh
+p_weight,0.95,7,True,27,1,sin
+p_weight,0.95,8,True,17,2,sin tanh
+p_weight,0.95,9,True,32,4,abs tanh tanh tanh
+p_weight,0.95,10,True,9,4,tanh tanh tanh tanh
+p_weight,0.95,11,True,22,1,sin
+p_weight,0.95,12,True,34,3,relu tanh tanh
+p_weight,0.95,13,True,11,1,tanh
+p_weight,0.95,14,True,5,1,tanh
+p_weight,0.95,15,True,13,1,sin
+p_weight,0.95,16,True,10,1,sin
+p_weight,0.95,17,True,16,3,sin tanh tanh
+p_weight,0.95,18,True,25,3,tanh tanh tanh
+p_weight,0.95,19,True,27,2,sin tanh
+sigma,0.1,0,True,37,7,sigmoid sin tanh tanh tanh tanh tanh
+sigma,0.1,1,True,37,2,sin tanh
+sigma,0.1,2,True,13,4,gauss tanh tanh tanh
+sigma,0.1,3,True,14,2,sin tanh
+sigma,0.1,4,True,15,2,sin sin
+sigma,0.1,5,True,24,3,sin sin tanh
+sigma,0.1,6,True,16,2,relu tanh
+sigma,0.1,7,True,15,1,abs
+sigma,0.1,8,True,22,4,tanh tanh tanh tanh
+sigma,0.1,9,True,24,2,sin tanh
+sigma,0.1,10,True,10,3,sin tanh tanh
+sigma,0.1,11,True,17,3,sin tanh tanh
+sigma,0.1,12,True,22,4,tanh tanh tanh tanh
+sigma,0.1,13,True,40,6,sin tanh tanh tanh tanh tanh
+sigma,0.1,14,True,20,1,sin
+sigma,0.1,15,True,35,4,sin tanh tanh tanh
+sigma,0.1,16,True,20,4,abs tanh tanh tanh
+sigma,0.1,17,True,31,2,tanh tanh
+sigma,0.1,18,True,25,5,sin tanh tanh tanh tanh
+sigma,0.1,19,True,29,3,abs tanh tanh
+sigma,0.5,0,True,10,2,sin tanh
+sigma,0.5,1,True,18,2,tanh tanh
+sigma,0.5,2,True,15,1,sin
+sigma,0.5,3,True,19,4,abs sin tanh tanh
+sigma,0.5,4,True,40,6,tanh tanh tanh tanh tanh tanh
+sigma,0.5,5,True,21,2,sin tanh
+sigma,0.5,6,True,21,5,sin tanh tanh tanh tanh
+sigma,0.5,7,True,7,2,abs sin
+sigma,0.5,8,True,24,1,sin
+sigma,0.5,9,True,6,2,sin tanh
+sigma,0.5,10,True,16,3,abs sin tanh
+sigma,0.5,11,True,29,2,tanh tanh
+sigma,0.5,12,True,8,2,sin tanh
+sigma,0.5,13,True,29,3,sin tanh tanh
+sigma,0.5,14,True,13,2,sin tanh
+sigma,0.5,15,True,12,4,sin tanh tanh tanh
+sigma,0.5,16,True,16,3,sin sin tanh
+sigma,0.5,17,True,34,4,tanh tanh tanh tanh
+sigma,0.5,18,True,36,3,sin tanh tanh
+sigma,0.5,19,True,16,1,sin
+sigma,1.0,0,True,12,1,sin
+sigma,1.0,1,True,15,2,tanh tanh
+sigma,1.0,2,True,17,3,abs tanh tanh
+sigma,1.0,3,True,12,3,gauss sin tanh
+sigma,1.0,4,True,13,1,gauss
+sigma,1.0,5,True,11,2,tanh tanh
+sigma,1.0,6,True,19,3,tanh tanh tanh
+sigma,1.0,7,True,14,2,sin tanh
+sigma,1.0,8,True,13,4,sin tanh tanh tanh
+sigma,1.0,9,True,30,2,relu tanh
+sigma,1.0,10,True,17,5,sin tanh tanh tanh tanh
+sigma,1.0,11,True,16,3,tanh tanh tanh
+sigma,1.0,12,True,26,2,tanh tanh
+sigma,1.0,13,True,18,1,sin
+sigma,1.0,14,True,18,2,tanh tanh
+sigma,1.0,15,True,18,2,tanh tanh
+sigma,1.0,16,True,19,4,sin tanh tanh tanh
+sigma,1.0,17,True,11,1,abs
+sigma,1.0,18,True,23,3,tanh tanh tanh
+sigma,1.0,19,True,12,1,sin
+sigma,2.0,0,True,12,1,sin
+sigma,2.0,1,True,30,4,gauss tanh tanh tanh
+sigma,2.0,2,True,18,3,tanh tanh tanh
+sigma,2.0,3,True,17,5,sin tanh tanh tanh tanh
+sigma,2.0,4,True,24,4,sin tanh tanh tanh
+sigma,2.0,5,True,28,3,gauss tanh tanh
+sigma,2.0,6,True,22,5,tanh tanh tanh tanh tanh
+sigma,2.0,7,True,24,2,tanh tanh
+sigma,2.0,8,True,10,2,relu tanh
+sigma,2.0,9,True,14,3,tanh tanh tanh
+sigma,2.0,10,True,10,2,gauss tanh
+sigma,2.0,11,True,10,3,relu tanh tanh
+sigma,2.0,12,True,21,2,tanh tanh
+sigma,2.0,13,True,9,1,relu
+sigma,2.0,14,True,13,4,tanh tanh tanh tanh
+sigma,2.0,15,True,8,1,sin
+sigma,2.0,16,True,13,3,tanh tanh tanh
+sigma,2.0,17,True,11,1,sin
+sigma,2.0,18,True,24,3,sin tanh tanh
+sigma,2.0,19,True,25,5,abs sigmoid tanh tanh tanh
+p_add_conn,0.03,0,True,23,3,sin tanh tanh
+p_add_conn,0.03,1,True,18,4,sin tanh tanh tanh
+p_add_conn,0.03,2,True,14,1,sin
+p_add_conn,0.03,3,True,38,5,tanh tanh tanh tanh tanh
+p_add_conn,0.03,4,True,22,2,tanh tanh
+p_add_conn,0.03,5,True,10,1,sin
+p_add_conn,0.03,6,True,21,1,sin
+p_add_conn,0.03,7,True,15,2,abs tanh
+p_add_conn,0.03,8,True,16,1,sin
+p_add_conn,0.03,9,True,36,2,sin tanh
+p_add_conn,0.03,10,True,34,3,sin tanh tanh
+p_add_conn,0.03,11,True,18,2,sin tanh
+p_add_conn,0.03,12,True,24,5,tanh tanh tanh tanh tanh
+p_add_conn,0.03,13,True,19,1,sin
+p_add_conn,0.03,14,True,33,1,sin
+p_add_conn,0.03,15,True,17,2,sin tanh
+p_add_conn,0.03,16,True,21,6,abs tanh tanh tanh tanh tanh
+p_add_conn,0.03,17,True,22,2,sin tanh
+p_add_conn,0.03,18,True,91,7,abs relu tanh tanh tanh tanh tanh
+p_add_conn,0.03,19,True,24,2,sin tanh
+p_add_conn,0.1,0,True,10,2,sin tanh
+p_add_conn,0.1,1,True,18,2,tanh tanh
+p_add_conn,0.1,2,True,15,1,sin
+p_add_conn,0.1,3,True,19,4,abs sin tanh tanh
+p_add_conn,0.1,4,True,40,6,tanh tanh tanh tanh tanh tanh
+p_add_conn,0.1,5,True,21,2,sin tanh
+p_add_conn,0.1,6,True,21,5,sin tanh tanh tanh tanh
+p_add_conn,0.1,7,True,7,2,abs sin
+p_add_conn,0.1,8,True,24,1,sin
+p_add_conn,0.1,9,True,6,2,sin tanh
+p_add_conn,0.1,10,True,16,3,abs sin tanh
+p_add_conn,0.1,11,True,29,2,tanh tanh
+p_add_conn,0.1,12,True,8,2,sin tanh
+p_add_conn,0.1,13,True,29,3,sin tanh tanh
+p_add_conn,0.1,14,True,13,2,sin tanh
+p_add_conn,0.1,15,True,12,4,sin tanh tanh tanh
+p_add_conn,0.1,16,True,16,3,sin sin tanh
+p_add_conn,0.1,17,True,34,4,tanh tanh tanh tanh
+p_add_conn,0.1,18,True,36,3,sin tanh tanh
+p_add_conn,0.1,19,True,16,1,sin
+p_add_conn,0.3,0,True,8,2,abs tanh
+p_add_conn,0.3,1,True,11,4,abs tanh tanh tanh
+p_add_conn,0.3,2,True,18,4,abs tanh tanh tanh
+p_add_conn,0.3,3,True,16,3,tanh tanh tanh
+p_add_conn,0.3,4,True,11,2,abs tanh
+p_add_conn,0.3,5,True,14,1,abs
+p_add_conn,0.3,6,True,19,3,tanh tanh tanh
+p_add_conn,0.3,7,True,21,2,sin tanh
+p_add_conn,0.3,8,True,26,4,sin tanh tanh tanh
+p_add_conn,0.3,9,True,18,1,sin
+p_add_conn,0.3,10,True,30,4,sin tanh tanh tanh
+p_add_conn,0.3,11,True,10,1,sin
+p_add_conn,0.3,12,True,19,2,sin tanh
+p_add_conn,0.3,13,True,29,3,tanh tanh tanh
+p_add_conn,0.3,14,True,30,5,tanh tanh tanh tanh tanh
+p_add_conn,0.3,15,True,23,3,abs tanh tanh
+p_add_conn,0.3,16,True,15,1,sin
+p_add_conn,0.3,17,True,21,3,sin tanh tanh
+p_add_conn,0.3,18,True,27,1,sin
+p_add_conn,0.3,19,True,15,2,sin tanh
+p_add_node,0.01,0,True,22,1,sin
+p_add_node,0.01,1,True,20,1,sin
+p_add_node,0.01,2,True,19,1,abs
+p_add_node,0.01,3,True,5,1,tanh
+p_add_node,0.01,4,True,20,3,tanh tanh tanh
+p_add_node,0.01,5,True,29,1,sin
+p_add_node,0.01,6,True,15,1,sin
+p_add_node,0.01,7,True,33,1,sin
+p_add_node,0.01,8,True,11,1,tanh
+p_add_node,0.01,9,True,19,2,sin tanh
+p_add_node,0.01,10,True,13,1,sin
+p_add_node,0.01,11,True,20,2,sin tanh
+p_add_node,0.01,12,True,21,1,sin
+p_add_node,0.01,13,True,25,2,abs tanh
+p_add_node,0.01,14,True,19,1,sin
+p_add_node,0.01,15,True,11,2,gauss tanh
+p_add_node,0.01,16,True,17,1,sin
+p_add_node,0.01,17,True,19,1,tanh
+p_add_node,0.01,18,True,22,1,sin
+p_add_node,0.01,19,True,11,1,sin
+p_add_node,0.05,0,True,10,2,sin tanh
+p_add_node,0.05,1,True,18,2,tanh tanh
+p_add_node,0.05,2,True,15,1,sin
+p_add_node,0.05,3,True,19,4,abs sin tanh tanh
+p_add_node,0.05,4,True,40,6,tanh tanh tanh tanh tanh tanh
+p_add_node,0.05,5,True,21,2,sin tanh
+p_add_node,0.05,6,True,21,5,sin tanh tanh tanh tanh
+p_add_node,0.05,7,True,7,2,abs sin
+p_add_node,0.05,8,True,24,1,sin
+p_add_node,0.05,9,True,6,2,sin tanh
+p_add_node,0.05,10,True,16,3,abs sin tanh
+p_add_node,0.05,11,True,29,2,tanh tanh
+p_add_node,0.05,12,True,8,2,sin tanh
+p_add_node,0.05,13,True,29,3,sin tanh tanh
+p_add_node,0.05,14,True,13,2,sin tanh
+p_add_node,0.05,15,True,12,4,sin tanh tanh tanh
+p_add_node,0.05,16,True,16,3,sin sin tanh
+p_add_node,0.05,17,True,34,4,tanh tanh tanh tanh
+p_add_node,0.05,18,True,36,3,sin tanh tanh
+p_add_node,0.05,19,True,16,1,sin
+p_add_node,0.1,0,True,14,4,abs sin tanh tanh
+p_add_node,0.1,1,True,17,6,sigmoid sigmoid sin tanh tanh tanh
+p_add_node,0.1,2,True,26,5,abs tanh tanh tanh tanh
+p_add_node,0.1,3,True,30,4,gauss sin tanh tanh
+p_add_node,0.1,4,True,6,1,gauss
+p_add_node,0.1,5,True,6,2,tanh tanh
+p_add_node,0.1,6,True,15,3,sin tanh tanh
+p_add_node,0.1,7,True,20,1,sin
+p_add_node,0.1,8,True,25,3,abs tanh tanh
+p_add_node,0.1,9,True,33,3,sin tanh tanh
+p_add_node,0.1,10,True,28,6,relu sin tanh tanh tanh tanh
+p_add_node,0.1,11,True,21,3,sin tanh tanh
+p_add_node,0.1,12,True,23,6,gauss tanh tanh tanh tanh tanh
+p_add_node,0.1,13,True,15,3,sin tanh tanh
+p_add_node,0.1,14,True,23,3,sin tanh tanh
+p_add_node,0.1,15,True,6,2,tanh tanh
+p_add_node,0.1,16,True,17,4,sin tanh tanh tanh
+p_add_node,0.1,17,True,36,7,abs tanh tanh tanh tanh tanh tanh
+p_add_node,0.1,18,True,17,2,sin tanh
+p_add_node,0.1,19,True,6,2,sin tanh
+p_add_node,0.2,0,True,19,3,tanh tanh tanh
+p_add_node,0.2,1,True,9,4,sin tanh tanh tanh
+p_add_node,0.2,2,True,17,3,sin sin tanh
+p_add_node,0.2,3,True,15,6,tanh tanh tanh tanh tanh tanh
+p_add_node,0.2,4,True,18,6,sin tanh tanh tanh tanh tanh
+p_add_node,0.2,5,True,11,6,tanh tanh tanh tanh tanh tanh
+p_add_node,0.2,6,True,21,4,abs tanh tanh tanh
+p_add_node,0.2,7,True,23,3,sin tanh tanh
+p_add_node,0.2,8,True,29,9,tanh tanh tanh tanh tanh tanh tanh tanh tanh
+p_add_node,0.2,9,True,17,5,sin tanh tanh tanh tanh
+p_add_node,0.2,10,True,18,3,sin tanh tanh
+p_add_node,0.2,11,True,6,2,sin tanh
+p_add_node,0.2,12,True,34,6,gauss sin tanh tanh tanh tanh
+p_add_node,0.2,13,True,9,5,sin tanh tanh tanh tanh
+p_add_node,0.2,14,True,9,2,abs tanh
+p_add_node,0.2,15,True,16,2,tanh tanh
+p_add_node,0.2,16,True,36,6,relu tanh tanh tanh tanh tanh
+p_add_node,0.2,17,True,26,4,sin tanh tanh tanh
+p_add_node,0.2,18,True,20,4,tanh tanh tanh tanh
+p_add_node,0.2,19,True,48,8,tanh tanh tanh tanh tanh tanh tanh tanh
+p_activation,0.0,0,True,9,3,tanh tanh tanh
+p_activation,0.0,1,True,24,2,tanh tanh
+p_activation,0.0,2,True,36,3,tanh tanh tanh
+p_activation,0.0,3,True,82,5,tanh tanh tanh tanh tanh
+p_activation,0.0,4,True,21,3,tanh tanh tanh
+p_activation,0.0,5,True,19,3,tanh tanh tanh
+p_activation,0.0,6,True,29,5,tanh tanh tanh tanh tanh
+p_activation,0.0,7,True,35,5,tanh tanh tanh tanh tanh
+p_activation,0.0,8,True,38,5,tanh tanh tanh tanh tanh
+p_activation,0.0,9,True,28,4,tanh tanh tanh tanh
+p_activation,0.0,10,True,29,5,tanh tanh tanh tanh tanh
+p_activation,0.0,11,True,40,4,tanh tanh tanh tanh
+p_activation,0.0,12,True,24,2,tanh tanh
+p_activation,0.0,13,True,35,4,tanh tanh tanh tanh
+p_activation,0.0,14,True,11,5,tanh tanh tanh tanh tanh
+p_activation,0.0,15,True,12,1,tanh
+p_activation,0.0,16,True,13,4,tanh tanh tanh tanh
+p_activation,0.0,17,True,42,6,tanh tanh tanh tanh tanh tanh
+p_activation,0.0,18,True,37,2,tanh tanh
+p_activation,0.0,19,True,59,6,tanh tanh tanh tanh tanh tanh
+p_activation,0.05,0,True,10,2,sin tanh
+p_activation,0.05,1,True,18,2,tanh tanh
+p_activation,0.05,2,True,15,1,sin
+p_activation,0.05,3,True,19,4,abs sin tanh tanh
+p_activation,0.05,4,True,40,6,tanh tanh tanh tanh tanh tanh
+p_activation,0.05,5,True,21,2,sin tanh
+p_activation,0.05,6,True,21,5,sin tanh tanh tanh tanh
+p_activation,0.05,7,True,7,2,abs sin
+p_activation,0.05,8,True,24,1,sin
+p_activation,0.05,9,True,6,2,sin tanh
+p_activation,0.05,10,True,16,3,abs sin tanh
+p_activation,0.05,11,True,29,2,tanh tanh
+p_activation,0.05,12,True,8,2,sin tanh
+p_activation,0.05,13,True,29,3,sin tanh tanh
+p_activation,0.05,14,True,13,2,sin tanh
+p_activation,0.05,15,True,12,4,sin tanh tanh tanh
+p_activation,0.05,16,True,16,3,sin sin tanh
+p_activation,0.05,17,True,34,4,tanh tanh tanh tanh
+p_activation,0.05,18,True,36,3,sin tanh tanh
+p_activation,0.05,19,True,16,1,sin
+p_activation,0.2,0,True,7,2,relu sin
+p_activation,0.2,1,True,7,2,sin tanh
+p_activation,0.2,2,True,14,3,sin sin tanh
+p_activation,0.2,3,True,13,1,sin
+p_activation,0.2,4,True,14,3,gauss sigmoid sin
+p_activation,0.2,5,True,12,2,sin sin
+p_activation,0.2,6,True,13,1,sin
+p_activation,0.2,7,True,11,1,sin
+p_activation,0.2,8,True,19,4,abs relu sin tanh
+p_activation,0.2,9,True,10,2,sin tanh
+p_activation,0.2,10,True,18,1,sin
+p_activation,0.2,11,True,19,3,gauss sin tanh
+p_activation,0.2,12,True,23,1,sin
+p_activation,0.2,13,True,16,2,sin tanh
+p_activation,0.2,14,True,9,1,abs
+p_activation,0.2,15,True,21,4,relu sin tanh tanh
+p_activation,0.2,16,True,18,4,sigmoid sin tanh tanh
+p_activation,0.2,17,True,9,1,sin
+p_activation,0.2,18,True,12,4,abs tanh tanh tanh
+p_activation,0.2,19,True,12,2,sin tanh
+p_toggle,0.0,0,True,30,2,sin tanh
+p_toggle,0.0,1,True,16,1,tanh
+p_toggle,0.0,2,True,12,3,sin tanh tanh
+p_toggle,0.0,3,True,16,3,tanh tanh tanh
+p_toggle,0.0,4,True,12,1,abs
+p_toggle,0.0,5,True,26,4,tanh tanh tanh tanh
+p_toggle,0.0,6,True,41,1,sin
+p_toggle,0.0,7,True,24,3,relu tanh tanh
+p_toggle,0.0,8,True,29,6,tanh tanh tanh tanh tanh tanh
+p_toggle,0.0,9,True,19,6,sin tanh tanh tanh tanh tanh
+p_toggle,0.0,10,True,14,3,sin tanh tanh
+p_toggle,0.0,11,True,16,1,sin
+p_toggle,0.0,12,True,19,4,tanh tanh tanh tanh
+p_toggle,0.0,13,True,20,2,sin tanh
+p_toggle,0.0,14,True,17,1,sin
+p_toggle,0.0,15,True,31,3,relu sin tanh
+p_toggle,0.0,16,True,10,3,tanh tanh tanh
+p_toggle,0.0,17,True,16,4,relu relu relu tanh
+p_toggle,0.0,18,True,43,3,sin tanh tanh
+p_toggle,0.0,19,True,18,2,abs tanh
+p_toggle,0.01,0,True,10,2,sin tanh
+p_toggle,0.01,1,True,18,2,tanh tanh
+p_toggle,0.01,2,True,15,1,sin
+p_toggle,0.01,3,True,19,4,abs sin tanh tanh
+p_toggle,0.01,4,True,40,6,tanh tanh tanh tanh tanh tanh
+p_toggle,0.01,5,True,21,2,sin tanh
+p_toggle,0.01,6,True,21,5,sin tanh tanh tanh tanh
+p_toggle,0.01,7,True,7,2,abs sin
+p_toggle,0.01,8,True,24,1,sin
+p_toggle,0.01,9,True,6,2,sin tanh
+p_toggle,0.01,10,True,16,3,abs sin tanh
+p_toggle,0.01,11,True,29,2,tanh tanh
+p_toggle,0.01,12,True,8,2,sin tanh
+p_toggle,0.01,13,True,29,3,sin tanh tanh
+p_toggle,0.01,14,True,13,2,sin tanh
+p_toggle,0.01,15,True,12,4,sin tanh tanh tanh
+p_toggle,0.01,16,True,16,3,sin sin tanh
+p_toggle,0.01,17,True,34,4,tanh tanh tanh tanh
+p_toggle,0.01,18,True,36,3,sin tanh tanh
+p_toggle,0.01,19,True,16,1,sin
+p_toggle,0.05,0,True,25,4,relu tanh tanh tanh
+p_toggle,0.05,1,True,12,2,sin tanh
+p_toggle,0.05,2,True,19,4,abs sin tanh tanh
+p_toggle,0.05,3,True,22,5,gauss tanh tanh tanh tanh
+p_toggle,0.05,4,True,14,3,tanh tanh tanh
+p_toggle,0.05,5,True,14,5,sin tanh tanh tanh tanh
+p_toggle,0.05,6,True,19,2,sin tanh
+p_toggle,0.05,7,True,18,3,sin tanh tanh
+p_toggle,0.05,8,True,15,2,tanh tanh
+p_toggle,0.05,9,True,21,2,sin tanh
+p_toggle,0.05,10,True,17,2,sin tanh
+p_toggle,0.05,11,True,17,4,relu sin tanh tanh
+p_toggle,0.05,12,True,18,3,sin tanh tanh
+p_toggle,0.05,13,True,30,3,sigmoid sin tanh
+p_toggle,0.05,14,True,16,4,tanh tanh tanh tanh
+p_toggle,0.05,15,True,15,3,tanh tanh tanh
+p_toggle,0.05,16,True,32,4,sin tanh tanh tanh
+p_toggle,0.05,17,True,16,3,tanh tanh tanh
+p_toggle,0.05,18,True,23,4,sin tanh tanh tanh
+p_toggle,0.05,19,True,12,1,sin
+p_crossover,0.0,0,True,7,1,sin
+p_crossover,0.0,1,True,19,3,tanh tanh tanh
+p_crossover,0.0,2,True,31,3,sin tanh tanh
+p_crossover,0.0,3,True,24,1,sin
+p_crossover,0.0,4,True,16,1,abs
+p_crossover,0.0,5,True,23,2,sin tanh
+p_crossover,0.0,6,True,15,2,tanh tanh
+p_crossover,0.0,7,True,28,3,tanh tanh tanh
+p_crossover,0.0,8,True,19,6,relu sin tanh tanh tanh tanh
+p_crossover,0.0,9,True,15,2,sin tanh
+p_crossover,0.0,10,True,9,2,sin tanh
+p_crossover,0.0,11,True,24,1,sin
+p_crossover,0.0,12,True,26,1,sin
+p_crossover,0.0,13,True,19,4,abs tanh tanh tanh
+p_crossover,0.0,14,True,18,2,sin tanh
+p_crossover,0.0,15,True,30,3,sin tanh tanh
+p_crossover,0.0,16,True,10,1,tanh
+p_crossover,0.0,17,True,19,1,abs
+p_crossover,0.0,18,True,11,2,sin tanh
+p_crossover,0.0,19,True,35,3,tanh tanh tanh
+p_crossover,0.25,0,True,23,2,sin tanh
+p_crossover,0.25,1,True,20,2,abs tanh
+p_crossover,0.25,2,True,8,1,sin
+p_crossover,0.25,3,True,30,2,sin tanh
+p_crossover,0.25,4,True,15,1,sin
+p_crossover,0.25,5,True,10,4,relu tanh tanh tanh
+p_crossover,0.25,6,True,17,3,tanh tanh tanh
+p_crossover,0.25,7,True,22,2,abs tanh
+p_crossover,0.25,8,True,19,5,abs relu tanh tanh tanh
+p_crossover,0.25,9,True,26,3,tanh tanh tanh
+p_crossover,0.25,10,True,16,4,sin tanh tanh tanh
+p_crossover,0.25,11,True,24,2,abs tanh
+p_crossover,0.25,12,True,20,1,sin
+p_crossover,0.25,13,True,21,6,relu sin tanh tanh tanh tanh
+p_crossover,0.25,14,True,19,6,relu sin tanh tanh tanh tanh
+p_crossover,0.25,15,True,20,3,sin tanh tanh
+p_crossover,0.25,16,True,13,1,abs
+p_crossover,0.25,17,True,30,1,sin
+p_crossover,0.25,18,True,27,2,relu tanh
+p_crossover,0.25,19,True,10,3,abs sin tanh
+p_crossover,0.75,0,True,10,2,sin tanh
+p_crossover,0.75,1,True,18,2,tanh tanh
+p_crossover,0.75,2,True,15,1,sin
+p_crossover,0.75,3,True,19,4,abs sin tanh tanh
+p_crossover,0.75,4,True,40,6,tanh tanh tanh tanh tanh tanh
+p_crossover,0.75,5,True,21,2,sin tanh
+p_crossover,0.75,6,True,21,5,sin tanh tanh tanh tanh
+p_crossover,0.75,7,True,7,2,abs sin
+p_crossover,0.75,8,True,24,1,sin
+p_crossover,0.75,9,True,6,2,sin tanh
+p_crossover,0.75,10,True,16,3,abs sin tanh
+p_crossover,0.75,11,True,29,2,tanh tanh
+p_crossover,0.75,12,True,8,2,sin tanh
+p_crossover,0.75,13,True,29,3,sin tanh tanh
+p_crossover,0.75,14,True,13,2,sin tanh
+p_crossover,0.75,15,True,12,4,sin tanh tanh tanh
+p_crossover,0.75,16,True,16,3,sin sin tanh
+p_crossover,0.75,17,True,34,4,tanh tanh tanh tanh
+p_crossover,0.75,18,True,36,3,sin tanh tanh
+p_crossover,0.75,19,True,16,1,sin
+p_crossover,1.0,0,True,10,1,sin
+p_crossover,1.0,1,True,40,6,relu sin tanh tanh tanh tanh
+p_crossover,1.0,2,True,28,4,relu tanh tanh tanh
+p_crossover,1.0,3,True,20,2,sigmoid sin
+p_crossover,1.0,4,True,20,3,sin tanh tanh
+p_crossover,1.0,5,True,19,5,sin tanh tanh tanh tanh
+p_crossover,1.0,6,True,17,1,sin
+p_crossover,1.0,7,True,69,4,sin tanh tanh tanh
+p_crossover,1.0,8,True,14,4,sin tanh tanh tanh
+p_crossover,1.0,9,True,10,2,tanh tanh
+p_crossover,1.0,10,True,24,2,sin tanh
+p_crossover,1.0,11,True,21,2,sin tanh
+p_crossover,1.0,12,True,11,4,sin tanh tanh tanh
+p_crossover,1.0,13,True,15,2,sin tanh
+p_crossover,1.0,14,True,29,2,sin tanh
+p_crossover,1.0,15,True,40,4,tanh tanh tanh tanh
+p_crossover,1.0,16,True,6,2,sin tanh
+p_crossover,1.0,17,True,11,1,relu
+p_crossover,1.0,18,True,10,2,sin tanh
+p_crossover,1.0,19,True,16,4,tanh tanh tanh tanh

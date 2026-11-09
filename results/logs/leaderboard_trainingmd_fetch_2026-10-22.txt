@@ -1,0 +1,41 @@
+# Live fetch of slimevolleygym TRAINING.md (baselines vs the built-in AI)
+# Raw fetch output, copied verbatim.
+# Command run at 2026-10-22 20:40:41 IST; output returned at 2026-10-22 20:40:52 IST.
+
+## Command
+{
+ "url": "https://github.com/hardmaru/slimevolleygym/blob/master/TRAINING.md",
+ "prompt": "Describe exactly how self-play was done for each method (GA self-play, CMA-ES self-play, PPO self-play): how opponents are chosen, how/when the opponent is updated (thresholds, champion replacement, tournaments), population sizes, number of generations/timesteps, and the final scores against the built-in AI. Quote key details and numbers."
+}
+
+## Output
+**GA Self-Play (tournament selection)**
+- **Setup:** A population starts with random parameters. Each game, two random agents play. If the game is tied, noise is added to the second agent. Otherwise, the loser is replaced by a clone of the winner with noise added (epsilon = 0.1).
+- **Opponent choice:** The opponent is another member of the same population, chosen at random.
+- **Updates:** Updates happen after every game, with no thresholds or champion list.
+- **Population size:** Not stated. The pseudocode uses a `population_size` variable without giving a value.
+- **Training length:** 500,000 tournaments on a single CPU, taking "only a few hours."
+- **Selection of final agent:** The agent with the longest evolutionary lineage, used as a proxy for the best.
+- **Score vs. built-in AI:** 0.353 ± 0.728 over 1000 episodes.
+
+**PPO Self-Play (champion list)**
+- **Setup:** A Champion List starts with one random policy. At the start of each episode, the most recent champion is loaded as the opponent.
+- **Opponent choice:** The most recent champion. The authors note that Bansal et al. discuss other sampling methods, which they left as an exercise.
+- **Updates:** A challenger becomes the new champion once it "must achieve an average score above 0.5 against the previous champion."
+- **Population size:** Not applicable. There is one agent and a growing list of past champions.
+- **Training length:** Training converged at "around 140 generations," and later champions took a long time to appear.
+- **Score vs. built-in AI:** -0.371 ± 1.085 over 1000 episodes for the latest champion.
+
+**CMA-ES Self-Play (cooperative)**
+- **Setup:** The opponent is an exact copy of the agent. The goal is not to win but to keep the rally going for as long as possible, up to 3000 timesteps.
+- **Opponent choice:** A clone of the agent itself.
+- **Updates:** CMA-ES optimizes the agent's parameters to maximize expected episode duration.
+- **Population size:** Not stated.
+- **Training length:** Episode duration reaches the maximum "after a few hundred generations." The best agent is taken after 500 generations.
+- **Score vs. built-in AI:** -0.071 ± 0.827 over 1000 episodes.
+
+**Reference points (trained against the built-in AI, not self-play)**
+- PPO: 1.377 ± 1.133
+- CMA-ES: 1.148 ± 1.071
+
+Head-to-head, the self-play GA beat the PPO agent (3.128 ± 1.509) and the CMA-ES agent (0.301 ± 0.618), even though it scored lowest against the built-in AI.

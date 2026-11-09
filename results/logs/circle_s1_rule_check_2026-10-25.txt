@@ -1,0 +1,3 @@
+circle seed 1 train: evolved genome 0.990   fixed rule r<3.125 1.000
+circle seed 1 val: evolved genome 0.990   fixed rule r<3.125 0.975
+circle seed 1 test: evolved genome 0.930   fixed rule r<3.125 0.975

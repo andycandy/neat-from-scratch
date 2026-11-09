@@ -1,4 +1,4 @@
-"""Backprop-NEAT experiments (Unit 3 §14): datasets x seeds, one result row per run.
+"""Backprop-NEAT experiments : datasets x seeds, one result row per run.
 
 uv run python experiments/run_backprop.py                       # all 3 datasets x 2 seeds
 uv run python experiments/run_backprop.py --datasets circle --seeds 0 --generations 3   # smoke test
@@ -21,14 +21,14 @@ from neat.population import Population
 
 
 def make_config() -> NeatConfig:
-    """XOR defaults, changed only where Unit 3 asks (reasons in DECISIONS.md, Unit 3)."""
+    """XOR defaults with a few changes (reasons in docs/notebook.md, Backprop-NEAT)."""
     return NeatConfig(
         num_inputs=2, num_outputs=1,
-        output_activation="identity",   # the output is a logit; the sigmoid lives in the loss (§4)
-        activations=ACT_NAMES,          # differentiable only: no "step" (§11)
-        max_nodes=train.N_MAX,          # add-node skipped at the padding size (§9)
-        p_weight=0.2, sigma=0.1,        # gradients tune weights now; keep a little exploration (§7)
-        distance_coefficients=(0.5, 0.5, 0.1),   # lower c3: trained weights shouldn't split species (§7)
+        output_activation="identity",   # the output is a logit; the sigmoid lives in the loss
+        activations=ACT_NAMES,          # differentiable only: no "step"
+        max_nodes=train.N_MAX,          # add-node skipped at the padding size
+        p_weight=0.2, sigma=0.1,        # gradients tune weights now; keep a little exploration
+        distance_coefficients=(0.5, 0.5, 0.1),   # lower c3: trained weights shouldn't split species
     )
 
 

@@ -1,4 +1,4 @@
-"""Padded fixed-size genomes for JAX (Unit 3 §9–11, §13).
+"""Padded fixed-size genomes for JAX.
 
 Every genome becomes arrays of the SAME shape, so one compiled function trains the
 whole population with vmap. Positions follow a topological order, so W and M are
@@ -21,7 +21,7 @@ ACT_ID = {name: i for i, name in enumerate(ACT_NAMES)}
 def all_activations(s: jnp.ndarray) -> jnp.ndarray:
     """Every activation applied to s, stacked on a new LAST axis: shape s.shape + (7,).
     All branches stay finite for finite s (jax.nn.sigmoid is the overflow-safe sigmoid), so an
-    unselected branch can't leak NaN into gradients (§11). No clipping: it would change
+    unselected branch can't leak NaN into gradients. No clipping: it would change
     identity/relu/abs/sin for |s| > clip and break equality with the NumPy network."""
     return jnp.stack([s, jax.nn.sigmoid(s), jnp.tanh(s), jnp.maximum(s, 0),
                       jnp.sin(s), jnp.exp(-s * s), jnp.abs(s)], axis=-1)
@@ -41,17 +41,10 @@ class Packed:
 def pack(genome: Genome, n_max: int) -> Packed:
     """Genome -> fixed-size arrays.
 
-    HINTS (§13):
-      1. order = topo_order(genome.nodes, enabled conns)   (from neat.network)
-         BUT inputs must sit at positions 0..num_inputs-1 in id order (x -> 0, y -> 1):
-         put sorted input ids first, then the non-input nodes in topological order.
-      2. pos = {node_id: position}
-      3. for each ENABLED conn: W[pos[src], pos[dest]] = weight;  M[...] = 1.0
-         (src's position is always lower than dest's -> upper triangular)
-      4. b[pos[n]] = node.bias, act[pos[n]] = ACT_ID[node.activation] for non-input nodes;
-         inputs and padding: bias 0, ACT_ID["identity"]
-      5. out_idx = positions of the OUTPUT nodes (sorted by id), as an int array
-    Pitfall: W[dst, src] in one place and W[src, dst] in another -> silently wrong network.
+    Inputs sit at positions 0..num_inputs-1 in id order (x -> 0, y -> 1), then the other
+    nodes in topological order. A source always has a lower position than its destination,
+    so W and M are upper triangular. Inputs and padding get bias 0 and identity.
+    `out_idx` holds the positions of the output nodes, sorted by id.
     """
     inputs = sorted(n for n, g in genome.nodes.items() if g.type == NodeType.INPUT)
     rest = [n for n in topo_order(genome.nodes, genome.conns.values()) if n not in inputs]
@@ -82,14 +75,8 @@ def forward(W, M, b, act, out_idx, x, num_inputs: int = 2):
     """Padded forward pass for ONE genome on a batch. x: (batch, num_inputs) -> (batch, n_outputs),
     the same contract as neat.network.run.
 
-    HINTS (§10):
-      a = zeros((batch, n_max));  a = a.at[:, :num_inputs].set(x)
-      WM = W * M
-      for j in range(num_inputs, n_max):           # becomes jax.lax.fori_loop(num_inputs, n_max, body, a)
-          s = b[j] + a @ WM[:, j]                  # (batch,)
-          a = a.at[:, j].set(all_activations(s)[:, act[j]])   # pick this node's activation
-      return a[:, out_idx]
-    Why the full dot product is safe: WM is upper triangular, and positions >= j are still 0.
+    Positions are filled in order by a fori_loop. The full dot product `a @ WM[:, j]` is safe
+    because WM is upper triangular and positions >= j are still 0.
     """
     x, W, M, b, act = (jnp.asarray(v) for v in (x, W, M, b, act))   # numpy can't be indexed by a traced j
     n_max = W.shape[0]
@@ -104,11 +91,10 @@ def forward(W, M, b, act, out_idx, x, num_inputs: int = 2):
 
 
 def unpack(genome: Genome, packed: Packed, W_trained, b_trained) -> Genome:
-    """Write trained weights back into a NEW genome (Lamarckian inheritance, §7).
+    """Write trained weights back into a NEW genome (Lamarckian inheritance).
 
-    HINTS: for each ENABLED conn: dataclasses.replace(conn, weight=float(W_trained[pos[src], pos[dest]]))
-           for each non-input node: dataclasses.replace(node, bias=float(b_trained[pos[n]]))
-           disabled conns keep their old weights. Return a new Genome (new dicts).
+    Enabled connections and non-input biases take the trained values. Disabled connections
+    keep their old weights. The input genome is not changed.
     """
     pos = packed.pos
     conns = {k: replace(c, weight=float(W_trained[pos[c.src], pos[c.dest]])) if c.enabled else c

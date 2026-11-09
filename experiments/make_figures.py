@@ -1,7 +1,7 @@
-"""Figures for the Part 1 Google Doc, sized to stay readable at half-page width
-(3.4 in wide, 8 pt text, 200 dpi). Reads only saved results; trains nothing.
+"""All figures in docs/report.md (3.4 in wide, 8 pt text, 200 dpi).
+Reads saved runs in runs/ only; trains nothing.
 
-uv run python experiments/figures_doc_part1.py
+uv run python experiments/make_figures.py
 """
 import csv
 import json
@@ -29,8 +29,8 @@ from neat.genes import NodeType
 from neat.network import compile_genome, run
 from neat.visualize import ACT_COLOURS, node_positions
 
-OUT = Path("doc_assets/part1/figures")
-W = 3.4                                    # inches: half of a Google Doc page
+OUT = Path("docs/figures")
+W = 3.4                                    # figure width in inches
 plt.rcParams.update({"font.size": 8, "axes.titlesize": 8, "axes.labelsize": 8, "legend.fontsize": 7,
                      "xtick.labelsize": 7, "ytick.labelsize": 7, "axes.spines.top": False,
                      "axes.spines.right": False, "savefig.dpi": 200})
@@ -84,7 +84,7 @@ def hof_history(*logs):
     return np.array(sorted(dict(pts).items()))
 
 
-# ---------------------------------------------------------------- Unit 2: XOR sweep
+# ---------------------------------------------------------------- XOR sweep
 def xor_sweep():
     text = Path("runs/sweep_xor/runs.csv").read_text().splitlines()
     rows = [r for r in csv.DictReader(text) if r["param"] == "p_activation"]
@@ -103,7 +103,7 @@ def xor_sweep():
     save(fig, "fig01_xor_p_activation.png")
 
 
-# ---------------------------------------------------------------- Unit 3: Backprop-NEAT
+# ---------------------------------------------------------------- Backprop-NEAT
 def best_seed(dataset):
     results = [json.loads(p.read_text()) for p in Path("runs/backprop").glob(f"{dataset}_s*/result.json")]
     return max(results, key=lambda r: r["val_fitness"])["seed"]
@@ -161,7 +161,7 @@ def pareto():
     save(fig, "fig05_backprop_spiral_pareto.png")
 
 
-# ---------------------------------------------------------------- Unit 4: Slime Volleyball
+# ---------------------------------------------------------------- Slime Volleyball
 LEADERBOARD = [(-4.866, "random policy"), (-0.071, "CMA-ES self-play"), (0.353, "GA self-play")]
 
 

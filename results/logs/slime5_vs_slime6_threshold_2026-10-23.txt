@@ -1,0 +1,18 @@
+# slime5 vs slime6 threshold and species, generations 0-374
+# Raw terminal output, copied verbatim (home folder redacted as <home>; an unrelated `ls` removed).
+# Command run at 2026-10-23 11:58:23 IST; output returned at 2026-10-23 11:58:25 IST.
+
+## Command
+cd "<home>/Desktop/Projects/NEAT-proj" && uv run python -c "
+import csv
+for r in ['slime5','slime6']:
+  t=[float(x['threshold']) for x in csv.DictReader(open(f'runs/{r}/stats.csv'))][:375]
+  s=[int(x['n_species']) for x in csv.DictReader(open(f'runs/{r}/stats.csv'))][:375]
+  print(r,'thr min %.1f max %.1f mean %.2f'%(min(t),max(t),sum(t)/len(t)),'species mean %.1f'%(sum(s)/len(s)))
+"
+
+## Output
+slime5 thr min 1.0 max 4.0 mean 2.79 species mean 10.3
+
+slime6 thr min 2.0 max 9.8 mean 5.71 species mean 10.1
+

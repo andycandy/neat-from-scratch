@@ -1,8 +1,8 @@
 """Watch an evolved agent play: saves a GIF and prints how it uses its buttons.
 
-uv run python experiments/watch.py --run runs/slime3                 # best game of 20
-uv run python experiments/watch.py --run runs/slime3 --best-of 50    # search more seeds
-uv run python experiments/watch.py --run runs/slime3 --seed 123      # one specific game
+uv run python experiments/watch.py --run runs/slime5                 # best game of 20
+uv run python experiments/watch.py --run runs/slime5 --best-of 50    # search more seeds
+uv run python experiments/watch.py --run runs/slime5 --seed 123      # one specific game
   --rank 0 = best hall-of-fame agent (1 = second best, ...)
 """
 import argparse
@@ -83,7 +83,7 @@ def save_gif(frames: np.ndarray, path: Path, every: int = 3, fps: int = 20) -> N
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--run", default="runs/slime2")
+    ap.add_argument("--run", default="runs/slime5")
     ap.add_argument("--rank", type=int, default=0)
     ap.add_argument("--seed", type=int, default=None, help="play this seed (skips the search)")
     ap.add_argument("--best-of", type=int, default=20, help="search this many fresh seeds")

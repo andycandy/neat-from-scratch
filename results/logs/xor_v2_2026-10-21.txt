@@ -1,0 +1,72 @@
+# XOR after species-survivor fix, 2-children minimum and dynamic threshold
+# Raw terminal output, copied verbatim (home folder redacted as <home>).
+# Command run at 2026-10-21 22:42:07 IST; output returned at 2026-10-21 22:42:22 IST.
+
+## Command
+python - <<'E'
+p='neat/config.py'
+s=open(p).read().rstrip()+"\n    min_species_size: int = 2         # children guaranteed to every surviving species\n"
+open(p,'w').write(s)
+p='neat/reproduction.py'
+s=open(p).read()
+s=s.replace("""    counts = allocate(species_scores(species_list), cfg.pop_size)
+""","""    scores = species_scores(species_list)
+    floor = cfg.min_species_size
+    if floor * len(species_list) <= cfg.pop_size:   # guarantee a minimum, share the rest
+        counts = [floor + c for c in allocate(scores, cfg.pop_size - floor * len(species_list))]
+    else:
+        counts = allocate(scores, cfg.pop_size)
+""")
+open(p,'w').write(s)
+p='tests/test_population.py'
+s=open(p).read()
+s=s.replace('''    late = [r["n_species"] for r in p.stats[-10:]]
+    assert p.stats[0]["n_species"] > 12 and np.mean(late) < p.stats[0]["n_species"]''','''    counts = [r["n_species"] for r in p.stats]
+    assert max(counts) > 12                                # starts with too many species
+    assert np.mean(counts[-10:]) < max(counts)             # threshold rose and pulled it down
+    assert p.stats[-1]["threshold"] > 0.3''')
+open(p,'w').write(s)
+p='tests/test_reproduction.py'
+s=open(p).read()
+s=s.replace("    sp[0].best_fitness = 1e9 * 0          # record already 0 -> no improvement this gen\n","    sp[0].best_fitness = 0.0              # record already 0 -> no improvement this gen\n")
+s=s.rstrip()+'''
+
+
+def test_min_species_size_guaranteed():
+    from neat.reproduction import breed_species, reproduce  # noqa: F401
+    cfg, t, rng, sp = _setup(lambda k, j: float(k), n_species=3)
+    _, survivors, _ = reproduce(sp, cfg, t, rng, generation=1, next_key=1000)
+    assert len(survivors) == 3           # worst species (score 0) still gets 2 children
+'''
+open(p,'w').write(s)
+E
+uv run python -m pytest -q tests 2>&1 | tail -2; uv run python experiments/xor.py
+
+## Output
+.......................................                                  [100%]
+
+39 passed in 10.34s
+
+seed 0: gen  10  fitness  9.003  hidden 2  solved True  outputs [0.03  0.724 0.801 0.495]
+
+seed 1: gen  21  fitness  9.473  hidden 3  solved True  outputs [0.001 0.601 0.91  0.432]
+
+seed 2: gen  17  fitness 10.726  hidden 1  solved True  outputs [0.006 0.999 0.744 0.463]
+
+seed 3: gen   7  fitness  8.028  hidden 1  solved True  outputs [0.285 0.843 0.715 0.439]
+
+seed 4: gen  13  fitness 13.864  hidden 3  solved True  outputs [0.03  0.885 0.984 0.116]
+
+seed 5: gen  34  fitness 13.326  hidden 3  solved True  outputs [0.    0.876 1.    0.226]
+
+seed 6: gen  29  fitness  9.912  hidden 3  solved True  outputs [0.025 0.963 0.672 0.462]
+
+seed 7: gen   6  fitness  9.309  hidden 3  solved True  outputs [0.326 0.866 0.756 0.245]
+
+seed 8: gen  14  fitness 10.131  hidden 4  solved True  outputs [0.092 0.65  0.957 0.332]
+
+seed 9: gen   6  fitness  7.024  hidden 2  solved True  outputs [0.493 0.782 0.793 0.432]
+
+solved 10/10
+
+generations to solve: 15.7 +- 9.2

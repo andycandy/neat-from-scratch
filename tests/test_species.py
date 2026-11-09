@@ -23,7 +23,7 @@ def test_symmetric():
     assert dist(a, b, CFG) == dist(b, a, CFG)
 
 
-def test_unit1_example():
+def test_hand_computed_distance():
     # matching {1,2,3} (mean |dw| = 0.3), a-only {4,5} excess... build E=2, D=3, N=6
     a = make({1: 0.0, 2: 0.0, 3: 0.0, 4: 0.0, 8: 0.0, 9: 0.0})        # 6 conns
     b = make({1: 0.3, 2: 0.3, 3: 0.3, 5: 0.0, 6: 0.0, 7: 0.0}) # 6 conns

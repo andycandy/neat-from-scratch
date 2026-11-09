@@ -1,6 +1,6 @@
-"""Significance checks quoted in the Part 1 write-up. Reads saved results only.
+"""Significance checks quoted in docs/report.md. Reads saved results only.
 
-uv run python experiments/stats_part1.py > logs/stats_part1_2026-10-25.txt
+uv run python experiments/significance.py > results/logs/significance_2026-10-25.txt
 """
 import csv
 import json
@@ -19,7 +19,7 @@ def perm_test(a, b, n=100_000):
     return (hits + 1) / (n + 1)
 
 
-# Decision 8: per-seed generations to solve XOR (logs/decision8_coefficients_xor_2026-10-23.txt)
+# Decision 8: per-seed generations to solve XOR (results/logs/decision8_coefficients_xor_2026-10-23.txt)
 ours = [10, 18, 15, 19, 40, 21, 21, 7, 24, 6]
 paper = [13, 16, 9, 11, 5, 9, 10, 12, 7, 6]
 print(f"decision 8: ours {np.mean(ours):.1f} +- {np.std(ours):.1f}, paper {np.mean(paper):.1f} +- {np.std(paper):.1f}, "

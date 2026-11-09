@@ -1,4 +1,4 @@
-"""Engineering improvement (Unit 3 §17): naive per-genome jit vs padded + vmap.
+"""Engineering improvement: naive per-genome jit vs padded + vmap.
 
 Both train the SAME genomes from the SAME starting weights on the SAME data with the same
 optimizer and step count, so the only difference is how the computation is compiled.

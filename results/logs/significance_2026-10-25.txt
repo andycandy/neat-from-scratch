@@ -1,0 +1,19 @@
+decision 8: ours 18.1 +- 9.4, paper 9.8 +- 3.2, medians 18.5 vs 9.5, permutation p = 0.0151 (10 vs 10 seeds)
+sweep p_weight=0.5 vs 0.8: median diff +4.0 gens, 95% CI [-4.0, +10.0]
+sweep p_weight=0.95 vs 0.8: median diff +0.5 gens, 95% CI [-6.5, +7.5]
+sweep sigma=0.1 vs 0.5: median diff +5.0 gens, 95% CI [-3.0, +11.0]
+sweep sigma=1.0 vs 0.5: median diff -0.5 gens, 95% CI [-8.0, +3.0]
+sweep sigma=2.0 vs 0.5: median diff -1.5 gens, 95% CI [-9.0, +6.5]
+sweep p_add_conn=0.03 vs 0.1: median diff +4.5 gens, 95% CI [-2.5, +8.5]
+sweep p_add_conn=0.3 vs 0.1: median diff +1.5 gens, 95% CI [-5.5, +6.0]
+sweep p_add_node=0.01 vs 0.05: median diff +2.0 gens, 95% CI [-5.0, +6.0]
+sweep p_add_node=0.1 vs 0.05: median diff +1.5 gens, 95% CI [-5.5, +8.0]
+sweep p_add_node=0.2 vs 0.05: median diff +1.0 gens, 95% CI [-6.0, +6.0]
+sweep p_activation=0.0 vs 0.05: median diff +12.0 gens, 95% CI [+3.0, +20.5]  <- CI excludes 0
+sweep p_activation=0.2 vs 0.05: median diff -4.0 gens, 95% CI [-10.5, +1.0]
+sweep p_toggle=0.0 vs 0.01: median diff +1.5 gens, 95% CI [-5.0, +8.0]
+sweep p_toggle=0.05 vs 0.01: median diff +0.5 gens, 95% CI [-6.0, +4.5]
+sweep p_crossover=0.0 vs 0.75: median diff +2.0 gens, 95% CI [-5.0, +8.0]
+sweep p_crossover=0.25 vs 0.75: median diff +3.0 gens, 95% CI [-4.0, +6.5]
+sweep p_crossover=1.0 vs 0.75: median diff +1.0 gens, 95% CI [-7.0, +6.5]
+slime final: -0.852 +- 1.26 over 1000 games, standard error 0.040

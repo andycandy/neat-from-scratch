@@ -1,0 +1,19 @@
+# slime3 evaluation-noise check (rank agreement between game sets)
+# Raw terminal output, copied verbatim (home folder redacted as <home>).
+# Command run at 2026-10-22 14:26:43 IST; output returned at 2026-10-22 14:30:28 IST.
+
+## Command
+uv run python "<scratch>\noise_check.py" "<home>\Desktop\Projects\NEAT-proj" 2>&1 | Select-String -NotMatch "resumed"
+
+## Output
+generation 246, 150 genomes
+
+fitness:  set A std 0.211, set B std 0.149
+
+rank agreement A vs B (Spearman):  fitness +0.13   pure score -0.07   returns +0.26
+
+top-15 by fitness: 2 of 15 genomes appear in both sets
+
+4-game fitness vs 16-game fitness (Spearman): +0.42
+
+16-game: mean score -4.858, returns/game 0.41, genomes with mean returns >= 1: 1

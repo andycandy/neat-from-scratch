@@ -1,0 +1,11 @@
+{
+  "generation": 1670,
+  "chosen_hof_rank": 0,
+  "select_mean_200": -1.005,
+  "games": 1000,
+  "mean": -0.852,
+  "std": 1.26,
+  "win_rate": 0.118,
+  "draw_rate": 0.31,
+  "loss_rate": 0.572
+}
